@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Track } from '@/lib/types';
-import { assetUrl } from '@/lib/catalog';
+import { assetUrl, mediaUrl } from '@/lib/catalog';
 import { pickNext, type Repeat } from '@/lib/queue';
 import { useLibrary } from '@/store/library';
 import { useSettings } from '@/store/settings';
@@ -20,7 +20,6 @@ export const usePlayer = create<PlayerState>(() => ({ currentId: null, queue: []
 
 const audio = new Audio();
 audio.preload = 'metadata';
-audio.crossOrigin = 'anonymous';
 
 export const getTime = () => audio.currentTime;
 export const isOffline = () => useSettings.getState().offlineMode || !navigator.onLine;
@@ -38,7 +37,7 @@ export function playTrack(id: string, queue?: string[]) {
   if (queue) usePlayer.setState({ queue });
   else if (!usePlayer.getState().queue.includes(id)) usePlayer.setState({ queue: [id] });
   usePlayer.setState({ currentId: id, buffering: true });
-  audio.src = assetUrl(t.audio);
+  audio.src = mediaUrl(t.audio);
   void audio.play().catch(() => { usePlayer.setState({ playing: false, buffering: false }); });
   setSession(t);
 }

@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath } from 'node:url';
 
 // CSP hanya untuk build: dev server butuh skrip inline (HMR). GitHub Pages tidak bisa memberi header, jadi lewat <meta>.
-const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: https://*.jamendo.com https://*.newjamendo.com; media-src 'self' https://*.jamendo.com https://*.newjamendo.com; font-src 'self'; connect-src 'self' https://api.jamendo.com https://*.jamendo.com https://*.newjamendo.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
 const csp = (): Plugin => ({ name: 'warnada-csp', apply: 'build', transformIndexHtml: (html) => html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`) });
 
 export default defineConfig({

@@ -9,7 +9,11 @@ import { useOnline } from '@/audio/hooks';
 import { useSettings } from '@/store/settings';
 import { Icon } from './Icon';
 
-export const Art = ({ genre, className = '' }: { genre: Genre; className?: string }) => <div className={`wd-art ${className}`} data-genre={genre} aria-hidden="true" />;
+export const Art = ({ genre, src, className = '' }: { genre: Genre; src?: string; className?: string }) => (
+  <div className={`wd-art ${className}`} data-genre={genre} aria-hidden="true">
+    {src && <img src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" />}
+  </div>
+);
 
 export function Switch({ on, onChange, labelId }: { on: boolean; onChange: (v: boolean) => void; labelId: string }) {
   return <button type="button" className="wd-switch" aria-pressed={on} aria-labelledby={labelId} onClick={() => onChange(!on)} />;
@@ -26,7 +30,7 @@ export function SongRow({ track, queue, showAlbum }: { track: Track; queue: stri
   const playable = canPlay(track);
   return (
     <button type="button" className="wd-row" disabled={!playable} aria-current={current} onClick={() => playTrack(track.id, queue)}>
-      <Art genre={track.genre} className="wd-row__art" />
+      <Art genre={track.genre} src={track.artwork} className="wd-row__art" />
       <span className="wd-row__text">
         <span className="wd-row__title">{track.title}</span>
         <span className="wd-row__meta">{track.artist} · {showAlbum ? track.album : formatTime(track.duration)}</span>

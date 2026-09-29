@@ -29,10 +29,16 @@ export default function PlayerPage() {
       </div>
       <div className="full__body">
         <div className="full__head">
-          <Art genre={track.genre} className="full__art" />
+          <Art genre={track.genre} src={track.artwork} className="full__art" />
           <div className="full__meta"><div><h1>{track.title}</h1><p className="muted">{track.artist} · {track.album}</p></div></div>
         </div>
         {lyricsView ? <Lyrics /> : <div style={{ flex: 1, minHeight: 0, display: 'flex' }}><div style={{ flex: 1, minHeight: 0, display: 'flex' }}><LyricsPreview /></div></div>}
+        {track.license && (
+          <p className="caption attribution">
+            {track.source === 'jamendo' ? 'Musik via Jamendo · ' : ''}
+            <a href={track.license.url} target="_blank" rel="noopener noreferrer">{track.license.label}</a>
+          </p>
+        )}
         <Progress />
         <div className="full__controls"><Transport big /></div>
       </div>
