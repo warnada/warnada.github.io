@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickNext } from './queue';
+import { pickNext, removeFromQueue } from './queue';
 
 const base = { queue: ['a', 'b', 'c'], currentId: 'b', shuffle: false, repeat: 'off' as const, auto: false, isPlayable: () => true, random: () => 0 };
 
@@ -27,5 +27,19 @@ describe('pickNext', () => {
       expect(res).toMatchObject({ type: 'play' });
       expect((res as { id: string }).id).not.toBe('b');
     }
+  });
+});
+
+describe('removeFromQueue', () => {
+  it('menghapus item selain lagu yang sedang diputar', () => {
+    expect(removeFromQueue(['a', 'b', 'c'], 'b', 'c')).toEqual(['a', 'b']);
+  });
+  it('lagu yang sedang diputar tidak bisa dihapus', () => {
+    const q = ['a', 'b'];
+    expect(removeFromQueue(q, 'a', 'a')).toBe(q);
+  });
+  it('id yang tidak ada mengembalikan array yang sama', () => {
+    const q = ['a'];
+    expect(removeFromQueue(q, 'a', 'zzz')).toBe(q);
   });
 });

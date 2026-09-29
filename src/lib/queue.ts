@@ -28,3 +28,9 @@ export function pickNext(ctx: QueueContext, dir: 1 | -1): QueueDecision {
   if (auto && repeat === 'off' && dir === 1 && i === playable.length - 1) return { type: 'stop' };
   return { type: 'play', id: playable[(i + dir + playable.length) % playable.length] };
 }
+
+/** Hapus satu item dari antrean. Lagu yang sedang diputar tidak boleh dihapus; tanpa perubahan = array yang sama. */
+export function removeFromQueue(queue: string[], currentId: string | null, id: string): string[] {
+  if (id === currentId || !queue.includes(id)) return queue;
+  return queue.filter((x) => x !== id);
+}

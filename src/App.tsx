@@ -10,7 +10,7 @@ import { useOnline } from '@/audio/hooks';
 import { LyricPanel, MiniPlayer, PlayerBar } from '@/components/Player';
 import { Nav } from '@/components/parts';
 import { Icon } from '@/components/Icon';
-import { ThemeSheet, Toast, useInstall } from '@/components/Overlays';
+import { QueueSheet, ThemeSheet, Toast, useInstall } from '@/components/Overlays';
 import { Downloads, Explore, Home, Library, Search } from '@/pages/pages';
 
 const PlayerPage = lazy(() => import('@/pages/PlayerPage'));
@@ -129,6 +129,7 @@ export default function App() {
         <Route path="*" element={<Shell />} />
       </Routes>
       <ThemeSheet />
+      <QueueSheet />
       <Toast />
     </>
   );

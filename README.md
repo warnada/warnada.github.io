@@ -12,7 +12,11 @@ Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan 
 - **Melanjutkan**: riwayat putar dan lagu terakhir (beserta posisinya) dipulihkan saat aplikasi dibuka, dalam keadaan jeda.
 - **Pintasan keyboard**: Spasi putar/jeda, ←/→ ±5 detik, N/P berikutnya/sebelumnya, Esc menutup pemutar.
 - **Offline yang jelas**: banner saat offline, dan lagu yang belum diunduh diberi keterangan "Belum diunduh".
-- Responsif: bottom nav (HP) → rail (tablet) → sidebar + panel lirik (desktop). Menghormati `prefers-reduced-motion` dan `prefers-reduced-transparency`.
+- **Beranda**: sapaan sesuai waktu, hero "lanjutkan" dengan progres, pilihan cepat (favorit → riwayat), dan rak suasana.
+- **Disukai**: ikon hati di setiap lagu; filter "Disukai" di Pustaka dan rak di Beranda. Tersimpan di perangkat.
+- **Antrean**: lihat, putar dari, dan hapus item antrean (sheet di HP/tablet, tab di panel desktop).
+- **Gestur**: geser ke bawah menutup pemutar; geser kiri/kanan pada sampul atau mini player pindah lagu.
+- **Responsif** mobile-first sampai layar lebar (container query): bottom nav (HP) → rail (tablet) → sidebar + panel lirik (laptop). Pemutar dua kolom (sampul + lirik) di tablet/laptop, dan mode landscape pendek untuk ponsel. Menghormati `prefers-reduced-motion` dan `prefers-reduced-transparency`.
 
 ## Stack
 

@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { activeLine, type LyricLine } from '@/lib/lrc';
 import { loadLyrics } from '@/lib/catalog';
 import { formatTime } from '@/lib/format';
-import { cycleRepeat, currentTrack, next, prev, seek, toggle, toggleShuffle, usePlayer } from '@/audio/engine';
+import { cycleRepeat, currentTrack, next, playTrack, prev, removeQueueItem, seek, toggle, toggleShuffle, usePlayer } from '@/audio/engine';
 import { useTime } from '@/audio/hooks';
 import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
-import { Art } from './parts';
+import { useSwipe } from '@/lib/useSwipe';
+import { Art, FavoriteButton } from './parts';
 import { Icon } from './Icon';
 
 function useCurrent() {
@@ -89,10 +90,11 @@ export function MiniPlayer() {
   const playing = usePlayer((s) => s.playing);
   const t = useTime();
   const duration = usePlayer((s) => s.duration) || track?.duration || 0;
+  const swipe = useSwipe(['next', 'prev'], (a) => (a === 'next' ? next() : prev()));
   if (!track) return null;
   return (
     <div className="mini wd-glass wd-glass--raised">
-      <Link to="/putar" className="mini__open" aria-label={`Buka pemutar: ${track.title}`}>
+      <Link to="/putar" className="mini__open" aria-label={`Buka pemutar: ${track.title}`} {...swipe}>
         <Art genre={track.genre} src={track.artwork} />
         <span className="wd-row__text"><span className="wd-row__title">{track.title}</span><span className="wd-row__meta">{track.artist}</span></span>
       </Link>
@@ -107,6 +109,7 @@ export function PlayerBar() {
   const track = useCurrent();
   const navigate = useNavigate();
   const panel = useUi((s) => s.lyricsPanel);
+  const tab = useUi((s) => s.panelTab);
   if (!track) return <div className="playerbar wd-glass wd-glass--raised"><span className="muted">Pilih lagu untuk mulai memutar.</span></div>;
   const wide = matchMedia('(min-width:1101px)').matches;
   return (
@@ -117,8 +120,11 @@ export function PlayerBar() {
       </button>
       <div className="playerbar__mid"><Transport /><div className="playerbar__seek"><Progress compact /></div></div>
       <div className="playerbar__end">
-        <button type="button" className={`icon-btn ${panel ? 'on' : ''}`} style={panel ? { color: 'var(--accent)' } : undefined} aria-label="Lirik" aria-pressed={wide ? panel : undefined}
-          onClick={() => (matchMedia('(min-width:1101px)').matches ? useUi.setState({ lyricsPanel: !panel }) : navigate('/putar'))}><Icon name="mic" /></button>
+        <FavoriteButton id={track.id} title={track.title} className="pb-extra" />
+        <button type="button" className="icon-btn pb-extra" style={panel && tab === 'queue' ? { color: 'var(--accent)' } : undefined} aria-label="Antrean"
+          onClick={() => { if (matchMedia('(min-width:1101px)').matches) useUi.setState({ lyricsPanel: true, panelTab: 'queue' }); else useUi.setState({ queueSheet: true }); }}><Icon name="queue" /></button>
+        <button type="button" className={`icon-btn ${panel ? 'on' : ''}`} style={panel && tab === 'lyrics' ? { color: 'var(--accent)' } : undefined} aria-label="Lirik" aria-pressed={wide ? panel && tab === 'lyrics' : undefined}
+          onClick={() => { if (!matchMedia('(min-width:1101px)').matches) navigate('/putar'); else useUi.setState(panel && tab === 'lyrics' ? { lyricsPanel: false } : { lyricsPanel: true, panelTab: 'lyrics' }); }}><Icon name="mic" /></button>
       </div>
     </div>
   );
@@ -127,14 +133,50 @@ export function PlayerBar() {
 export function LyricPanel() {
   const track = useCurrent();
   const open = useUi((s) => s.lyricsPanel);
+  const tab = useUi((s) => s.panelTab);
   if (!track || !open) return null;
   return (
-    <aside className="lyricpanel wd-glass" aria-label="Lirik lagu">
-      <div className="full__head" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <Art genre={track.genre} src={track.artwork} className="wd-row__art" />
-        <div><strong>{track.title}</strong><div className="caption">{track.artist}</div></div>
+    <aside className="lyricpanel wd-glass" aria-label="Panel lirik dan antrean">
+      <div className="seg" role="group" aria-label="Tampilan panel">
+        <button type="button" aria-pressed={tab === 'lyrics'} onClick={() => useUi.setState({ panelTab: 'lyrics' })}>Lirik</button>
+        <button type="button" aria-pressed={tab === 'queue'} onClick={() => useUi.setState({ panelTab: 'queue' })}>Antrean</button>
       </div>
-      <Lyrics />
+      {tab === 'lyrics' ? (
+        <>
+          <div className="full__head" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <Art genre={track.genre} src={track.artwork} className="wd-row__art" />
+            <div><strong>{track.title}</strong><div className="caption">{track.artist}</div></div>
+          </div>
+          <Lyrics />
+        </>
+      ) : <div className="lyricpanel__queue"><QueueList /></div>}
     </aside>
+  );
+}
+
+/** Daftar antrean: ketuk untuk memutar, × untuk menghapus (lagu yang sedang diputar tidak bisa dihapus). */
+export function QueueList() {
+  const queue = usePlayer((s) => s.queue);
+  const currentId = usePlayer((s) => s.currentId);
+  const playing = usePlayer((s) => s.playing);
+  const tracks = useLibrary((s) => s.tracks);
+  const items = queue.flatMap((id) => tracks.find((t) => t.id === id) ?? []);
+  if (!items.length) return <div className="empty"><h2>Antrean kosong</h2><p>Putar lagu dari Beranda atau Pustaka, dan lagu berikutnya muncul di sini.</p></div>;
+  return (
+    <ol className="queue" aria-label="Antrean">
+      {items.map((t) => {
+        const isCurrent = t.id === currentId;
+        return (
+          <li key={t.id} className="row-wrap">
+            <button type="button" className="wd-row" aria-current={isCurrent} onClick={() => playTrack(t.id)}>
+              <Art genre={t.genre} src={t.artwork} className="wd-row__art" />
+              <span className="wd-row__text"><span className="wd-row__title">{t.title}</span><span className="wd-row__meta">{isCurrent ? (playing ? 'Sedang diputar' : 'Dijeda') : t.artist}</span></span>
+              {isCurrent && playing && <span className="eq" aria-hidden="true"><i /><i /><i /></span>}
+            </button>
+            {isCurrent ? <span className="icon-btn" aria-hidden="true" /> : <button type="button" className="icon-btn" aria-label={`Hapus ${t.title} dari antrean`} onClick={() => removeQueueItem(t.id)}><Icon name="close" width={18} height={18} /></button>}
+          </li>
+        );
+      })}
+    </ol>
   );
 }

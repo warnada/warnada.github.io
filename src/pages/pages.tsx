@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { GENRES, GENRE_LABEL, type Genre, type Track } from '@/lib/types';
 import { formatSize } from '@/lib/format';
 import { loadLyrics } from '@/lib/catalog';
 import { cacheSupported, canDownload, storageEstimate } from '@/lib/offline';
-import { canPlay, playTrack, usePlayer } from '@/audio/engine';
+import { canPlay, playTrack, toggle, usePlayer } from '@/audio/engine';
 import { useOnline } from '@/audio/hooks';
 import { jamendo, useLibrary } from '@/store/library';
 import { useSession } from '@/store/session';
 import { matchTrack } from '@/lib/search';
+import { greetingFor, quickPicks } from '@/lib/home';
 import { useSettings } from '@/store/settings';
 import { Art, Chip, SongRow, Switch } from '@/components/parts';
 import { Icon } from '@/components/Icon';
@@ -16,6 +17,7 @@ import { InstallBanner } from '@/components/Overlays';
 
 const CAROUSEL_MAX = 12;
 const HOME_LIST_MAX = 12;
+const PICKS_MAX = 6;
 const SEARCH_DEBOUNCE_MS = 400;
 const ids = (t: Track[]) => t.map((x) => x.id);
 
@@ -59,48 +61,91 @@ function Loading({ status }: { status: string }) {
 
 export function Home() {
   const { tracks, status } = useTracks();
-  const navigate = useNavigate();
-  const current = usePlayer((s) => s.currentId);
+  const currentId = usePlayer((s) => s.currentId);
+  const playing = usePlayer((s) => s.playing);
   const loadingRemote = useLibrary((s) => s.loadingRemote);
-  const history = useSession((s) => s.history);
+  const { history, favorites, last } = useSession();
   useOnline(); useSettings((s) => s.offlineMode); useLibrary((s) => s.downloaded);
-  const featured = tracks.find((t) => t.id === current) ?? tracks[0];
-  const recent = history.flatMap((id) => tracks.find((t) => t.id === id) ?? []).slice(0, CAROUSEL_MAX);
+
+  const byId = (list: string[]) => list.flatMap((id) => tracks.find((t) => t.id === id) ?? []);
+  const recent = byId(history).slice(0, CAROUSEL_MAX);
+  const liked = byId(favorites).slice(0, CAROUSEL_MAX);
   const shelf = recent.length ? recent : tracks.slice(0, CAROUSEL_MAX);
+  const picks = quickPicks(tracks, favorites, history, PICKS_MAX);
+  const hero = tracks.find((t) => t.id === currentId) ?? tracks.find((t) => t.id === last?.id) ?? picks[0];
+  const isCurrent = !!hero && hero.id === currentId;
+  const resumed = !!hero && last?.id === hero.id && last.position > 1;
+  const progress = hero && last?.id === hero.id && hero.duration ? Math.min(100, (last.position / hero.duration) * 100) : 0;
+  const heroAction = () => { if (!hero) return; if (isCurrent) toggle(); else playTrack(hero.id, ids(tracks)); };
+
   return (
-    <div className="page">
-      <h1>Mau dengar apa?</h1>
+    <div className="page home">
+      <header className="page__head">
+        <p className="overline">{greetingFor(new Date().getHours())}</p>
+        <h1>Mau dengar apa?</h1>
+      </header>
       <OfflineNotice />
       <InstallBanner />
       <Loading status={status} />
-      {loadingRemote && <p className="caption" role="status">Memuat lagu dari Jamendo…</p>}
-      {featured && (
-        <div className="hero" data-genre={featured.genre}>
-          <span className="overline">Mix harian · {tracks.length} lagu</span>
-          <h2>{featured.title}</h2>
-          <p>{featured.artist}</p>
-          <div className="hero__actions">
-            <button type="button" className="wd-btn wd-btn--accent" onClick={() => playTrack(featured.id, ids(tracks))}><Icon name="play" />Putar</button>
-            <button type="button" className="wd-btn wd-btn--ghost" onClick={() => navigate('/unduhan')}><Icon name="download" />Unduh</button>
+      {status === 'ready' && !hero && <Empty title="Belum ada lagu">Katalog masih kosong.</Empty>}
+      {hero && (
+        <div className="home__top">
+          <div className="hero" data-genre={hero.genre}>
+            <span className="overline">{resumed || isCurrent ? 'Terakhir diputar' : `Mix harian · ${tracks.length} lagu`}</span>
+            <h2>{hero.title}</h2>
+            <p>{hero.artist}</p>
+            {progress > 0 && <div className="hero__progress" role="img" aria-label={`Sudah didengarkan ${Math.round(progress)} persen`}><i style={{ width: `${progress}%` }} /></div>}
+            <div className="hero__actions">
+              <button type="button" className="wd-btn wd-btn--accent" onClick={heroAction}><Icon name={isCurrent && playing ? 'pause' : 'play'} />{isCurrent && playing ? 'Jeda' : resumed || isCurrent ? 'Lanjutkan' : 'Putar'}</button>
+              <Link to="/unduhan" className="wd-btn wd-btn--ghost"><Icon name="download" />Unduh</Link>
+            </div>
           </div>
+          <section className="section picks-section" aria-labelledby="picks-h">
+            <h2 id="picks-h">Pilihan cepat</h2>
+            <div className="picks">{picks.map((t) => <PickTile key={t.id} track={t} queue={ids(tracks)} />)}</div>
+          </section>
         </div>
       )}
+      {loadingRemote && <p className="caption" role="status">Memuat lagu dari Jamendo…</p>}
       {!!tracks.length && <>
-        <section className="section"><h2>{recent.length ? 'Lanjutkan mendengarkan' : 'Populer'}</h2>
-          <div className="hscroll">{shelf.map((t) => (
-            <button key={t.id} type="button" className="card" disabled={!canPlay(t)} onClick={() => playTrack(t.id, ids(tracks))}>
-              <Art genre={t.genre} src={t.artwork} /><span className="wd-row__title" style={{ font: '700 15px var(--font-sans)' }}>{t.title}</span><span className="caption">{t.artist}</span>
-            </button>))}</div></section>
+        <section className="section"><div className="section__head"><h2>Suasana</h2><Link to="/jelajah" className="section__more">Jelajahi</Link></div>
+          <div className="hscroll hscroll--tiles">{GENRES.map((g) => (
+            <Link key={g} to={`/jelajah?g=${g}`} className="tile tile--sm" data-genre={g}><span>{GENRE_LABEL[g]}</span></Link>))}</div></section>
+        <Shelf title={recent.length ? 'Lanjutkan mendengarkan' : 'Populer'} tracks={shelf} all={tracks} />
+        {!!liked.length && <Shelf title="Disukai" tracks={liked} all={tracks} more={{ to: '/pustaka', label: 'Lihat semua' }} />}
         <section className="section"><div className="section__head"><h2>Semua lagu</h2>{tracks.length > HOME_LIST_MAX && <Link to="/pustaka" className="section__more">Lihat semua ({tracks.length})</Link>}</div>
-          <div className="list">{tracks.slice(0, HOME_LIST_MAX).map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>
+          <div className="list list--grid">{tracks.slice(0, HOME_LIST_MAX).map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>
       </>}
     </div>
   );
 }
 
+function PickTile({ track, queue }: { track: Track; queue: string[] }) {
+  useOnline(); useSettings((s) => s.offlineMode); useLibrary((s) => s.downloaded);
+  return (
+    <button type="button" className="pick" disabled={!canPlay(track)} onClick={() => playTrack(track.id, queue)}>
+      <Art genre={track.genre} src={track.artwork} className="pick__art" /><span className="pick__title">{track.title}</span>
+    </button>
+  );
+}
+
+function Shelf({ title, tracks, all, more }: { title: string; tracks: Track[]; all: Track[]; more?: { to: string; label: string } }) {
+  return (
+    <section className="section">
+      <div className="section__head"><h2>{title}</h2>{more && <Link to={more.to} className="section__more">{more.label}</Link>}</div>
+      <div className="hscroll">{tracks.map((t) => (
+        <button key={t.id} type="button" className="card" disabled={!canPlay(t)} onClick={() => playTrack(t.id, ids(all))}>
+          <Art genre={t.genre} src={t.artwork} /><span className="card__title">{t.title}</span><span className="caption">{t.artist}</span>
+        </button>))}</div>
+    </section>
+  );
+}
+
 export function Explore() {
   const { tracks, status } = useTracks();
-  const [genre, setGenre] = useState<Genre | null>(null);
+  const [params] = useSearchParams();
+  const fromUrl = GENRES.find((g) => g === params.get('g')) ?? null;
+  const [genre, setGenre] = useState<Genre | null>(fromUrl);
   const list = useMemo(() => (genre ? tracks.filter((t) => t.genre === genre) : []), [tracks, genre]);
   return (
     <div className="page">
@@ -118,24 +163,26 @@ export function Explore() {
   );
 }
 
-type Filter = 'semua' | 'offline' | Genre;
+type Filter = 'semua' | 'disukai' | 'offline' | Genre;
 export function Library() {
   const { tracks, status } = useTracks();
   const downloaded = useLibrary((s) => s.downloaded);
   const [f, setF] = useState<Filter>('semua');
-  const list = tracks.filter((t) => f === 'semua' || (f === 'offline' ? downloaded.has(t.id) : t.genre === f));
+  const favorites = useSession((s) => s.favorites);
+  const list = tracks.filter((t) => f === 'semua' || (f === 'disukai' ? favorites.includes(t.id) : f === 'offline' ? downloaded.has(t.id) : t.genre === f));
   return (
     <div className="page">
       <h1>Pustaka</h1>
       <div className="chips" role="group" aria-label="Filter">
         <Chip active={f === 'semua'} onClick={() => setF('semua')}>Semua</Chip>
+        <Chip active={f === 'disukai'} onClick={() => setF('disukai')}>Disukai</Chip>
         <Chip active={f === 'offline'} onClick={() => setF('offline')}>Offline</Chip>
         {GENRES.map((g) => <Chip key={g} active={f === g} onClick={() => setF(g)}>{GENRE_LABEL[g]}</Chip>)}
       </div>
       <OfflineNotice />
       <Loading status={status} />
-      {status === 'ready' && (list.length ? <div className="list">{list.map((t) => <SongRow key={t.id} track={t} queue={ids(list)} showAlbum />)}</div>
-        : <Empty title="Belum ada lagu di sini">{f === 'offline' ? 'Unduh lagu supaya bisa didengar tanpa internet.' : 'Coba filter lain.'}</Empty>)}
+      {status === 'ready' && (list.length ? <div className="list list--grid">{list.map((t) => <SongRow key={t.id} track={t} queue={ids(list)} showAlbum />)}</div>
+        : <Empty title="Belum ada lagu di sini">{f === 'offline' ? 'Unduh lagu supaya bisa didengar tanpa internet.' : f === 'disukai' ? 'Ketuk ikon hati di sebelah lagu untuk menyimpannya di sini.' : 'Coba filter lain.'}</Empty>)}
     </div>
   );
 }

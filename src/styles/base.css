@@ -281,3 +281,136 @@ h1,h2{text-wrap:balance}
 @media (hover:hover) and (min-width:601px){.kbd-hint{display:block}}
 .banner .wd-btn{flex-shrink:0}
 a.wd-btn{text-decoration:none}
+
+/* =====================  Gradien lebih halus (kontras lebih rendah)  ===================== */
+/* Stop berlapis (eased) menggantikan satu stop keras, dan opasitas dasar diturunkan. */
+.wd-stage::before{
+  inset:-10%;
+  opacity:calc(var(--mesh-opacity) * .46);
+  background:
+    radial-gradient(70% 60% at 12% 12%, var(--mesh-1) 0, color-mix(in srgb,var(--mesh-1) 45%,transparent) 38%, color-mix(in srgb,var(--mesh-1) 12%,transparent) 68%, transparent 100%),
+    radial-gradient(64% 54% at 92% 24%, var(--mesh-2) 0, color-mix(in srgb,var(--mesh-2) 45%,transparent) 38%, color-mix(in srgb,var(--mesh-2) 12%,transparent) 68%, transparent 100%),
+    radial-gradient(70% 60% at 38% 100%, var(--mesh-3) 0, color-mix(in srgb,var(--mesh-3) 45%,transparent) 38%, color-mix(in srgb,var(--mesh-3) 12%,transparent) 68%, transparent 100%),
+    radial-gradient(54% 48% at 82% 82%, var(--mesh-4) 0, color-mix(in srgb,var(--mesh-4) 40%,transparent) 40%, transparent 100%);
+}
+/* Lapisan tipis yang meredam warna di bagian bawah, tempat daftar dan navigasi berada */
+.wd-stage::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(transparent 40%,color-mix(in srgb,var(--surface-base) 62%,transparent))}
+/* Sampul, hero, dan ubin: transisi warna panjang dan alasnya dicampur dengan warna dasar halaman */
+.wd-art,.hero::before,.tile::before{
+  background:
+    radial-gradient(90% 90% at 18% 18%, var(--mesh-2), transparent 100%),
+    radial-gradient(90% 90% at 88% 22%, var(--mesh-1), transparent 100%),
+    radial-gradient(100% 100% at 45% 100%, var(--mesh-3), transparent 100%),
+    color-mix(in srgb, var(--mesh-4) 70%, var(--surface-base));
+}
+.hero::after{background:linear-gradient(transparent 10%,rgba(0,0,0,.42))}
+.tile::after{background:linear-gradient(transparent 25%,rgba(0,0,0,.4))}
+
+/* =====================  Responsif: mobile-first → tablet → laptop → layar lebar  ===================== */
+.shell__main{container:main / inline-size}
+.page{width:100%;max-width:1240px;margin-inline:auto}
+.page__head{display:flex;flex-direction:column;gap:4px}
+.page__head .overline{text-transform:none;letter-spacing:.02em;font-size:14px}
+
+.row-wrap{display:flex;align-items:center;min-width:0}
+.row-wrap>.wd-row{flex:1;min-width:0;width:auto}
+.list--grid{display:grid;grid-template-columns:minmax(0,1fr);column-gap:var(--space-3)}
+@container main (min-width:640px){.list--grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container main (min-width:980px){.list--grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.fav{flex-shrink:0}
+.fav svg{width:22px;height:22px}
+.fav.is-on{color:var(--ink)}
+.fav.is-on svg{animation:pop .35s var(--ease)}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+
+/* Beranda */
+.home__top{display:grid;gap:var(--space-6)}
+@container main (min-width:900px){.home__top{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);align-items:stretch}.home__top .hero{height:100%}}
+.hero{min-height:clamp(200px,34cqw,300px)}
+.hero h2{font-size:clamp(30px,6cqw,52px)}
+.hero__progress{height:4px;border-radius:99px;background:rgba(255,255,255,.3);overflow:hidden}
+.hero__progress i{display:block;height:100%;background:#fff;border-radius:inherit}
+.hero .wd-btn{text-decoration:none}
+.picks-section{display:flex;flex-direction:column}
+.picks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2);flex:1;align-content:start}
+@container main (min-width:560px) and (max-width:899px){.picks{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.pick{display:flex;align-items:center;gap:var(--space-3);min-height:64px;padding:0 var(--space-3) 0 0;border-radius:var(--radius-md);background:var(--glass-1);border:1px solid var(--stroke-glass);overflow:hidden;cursor:pointer;text-align:left;color:inherit;transition:transform var(--t-fast) var(--ease),background-color var(--t-med) var(--ease)}
+.pick:active{transform:scale(.97)}
+.pick:disabled{opacity:.45;cursor:not-allowed}
+@media (hover:hover){.pick:hover{background:var(--glass-2)}}
+.pick .pick__art{width:64px;height:64px;border-radius:0;flex-shrink:0}
+.pick__title{font:700 14px/1.25 var(--font-sans);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hscroll--tiles{gap:var(--space-2)}
+.tile--sm{flex:0 0 auto;min-width:132px;min-height:84px;text-decoration:none;scroll-snap-align:start;font-size:17px}
+.card{flex:0 0 clamp(140px,24cqw,200px)}
+.card .wd-art{width:100%;height:auto;aspect-ratio:1}
+.card__title{font:700 15px/1.3 var(--font-sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.card .caption{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.genre-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+
+/* Antrean */
+.queue{list-style:none;margin:0 calc(var(--space-3) * -1);padding:0;display:flex;flex-direction:column;gap:2px}
+.queue .row-wrap:has([aria-current="true"]) .wd-row__title{color:var(--accent)}
+.eq{display:inline-flex;align-items:flex-end;gap:2px;height:16px;margin-right:var(--space-2);color:var(--accent)}
+.eq i{width:3px;background:currentColor;border-radius:2px;animation:eq 1s ease-in-out infinite}
+.eq i:nth-child(1){height:60%;animation-delay:-.4s}.eq i:nth-child(2){height:100%;animation-delay:-.2s}.eq i:nth-child(3){height:40%}
+@keyframes eq{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+.eq i{transform-origin:bottom}
+.lyricpanel .seg{flex-shrink:0;margin-bottom:var(--space-3)}
+.lyricpanel__queue{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
+
+/* Layar pemutar: susunan satu kolom (HP/tablet portrait) */
+.full__body{display:flex;flex-direction:column}
+.full__main{display:contents}
+.full__head{order:1}.full__side{order:2;flex:1;min-height:0;display:flex}
+.full__side>*{flex:1;min-width:0}
+.attribution{order:3}.full__main>.seek,.full__main>div:has(.seek){order:4}.full__controls{order:5}
+.full__lyriccard{min-height:0;display:flex;padding:0 16px;overflow:hidden;margin:8px 0}
+.full__lyriccard .full__lyrics{padding-block:14vh}
+
+.playerbar__end{width:auto;flex-shrink:0;gap:0}
+.playerbar__now{width:auto;flex:0 1 28%}
+@media (max-width:759px){.pb-extra{display:none}}
+
+/* Tablet & laptop: pemutar dua kolom (sampul + kontrol | lirik) */
+@media (min-width:820px){
+  .full__body{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(24px,5vw,72px);align-items:center;max-width:1180px}
+  .full__main{display:flex;flex-direction:column;gap:var(--space-3);min-width:0}
+  .full__head,.full__side,.attribution,.full__controls,.full__main>div:has(.seek){order:0}
+  .full__side{height:min(72vh,640px)}
+  .full__art,.full--lyrics .full__art{width:min(100%,380px,48vh);aspect-ratio:1;margin:0 0 var(--space-3);border-radius:var(--radius-art);box-shadow:var(--shadow-art)}
+  .full--lyrics .full__head{display:block}
+  .full--lyrics .full__meta{margin-top:var(--space-2)}
+  .full--lyrics .full__meta h1{font-size:26px}
+  .full__lyric-toggle{display:none}
+  .full__lyriccard{margin:0;height:100%;background:transparent;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0}
+  .full__lyriccard .full__lyrics{padding-block:22vh}
+  .full__meta h1{font-size:clamp(26px,3vw,36px)}
+}
+/* Ponsel landscape / layar pendek */
+@media (max-height:520px) and (orientation:landscape){
+  .full{padding-top:calc(env(safe-area-inset-top) + 4px)}
+  .full__top{height:44px}
+  .full__art,.full--lyrics .full__art{width:min(34vh,150px)}
+  .full__meta h1{font-size:20px!important}
+  .full__controls .wd-play{width:56px;height:56px}
+  .full__side{height:min(62vh,300px)}
+  .hero{min-height:160px}
+}
+
+/* Laptop */
+@media (min-width:1101px){
+  .playerbar__now{flex-basis:30%}
+  .topbar{justify-content:flex-end}
+}
+/* Layar lebar */
+@media (min-width:1600px){
+  .shell{grid-template-columns:280px 1fr auto}
+  .lyricpanel{width:clamp(380px,24vw,460px)}
+  .shell__main{padding-inline:clamp(40px,4vw,80px)}
+  .topbar{margin-inline:calc(clamp(40px,4vw,80px) * -1);padding-inline:clamp(40px,4vw,80px)}
+}
+
+/* Saat halaman dibatasi lebar maksimum (di tengah), rak geser tidak perlu menempel ke tepi layar */
+@container main (min-width:1340px){.hscroll,.chips{margin-inline:0;padding-inline:0}}
