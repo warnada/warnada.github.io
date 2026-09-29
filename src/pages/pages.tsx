@@ -1,21 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { GENRES, GENRE_LABEL, type Genre, type Track } from '@/lib/types';
 import { formatSize } from '@/lib/format';
 import { loadLyrics } from '@/lib/catalog';
-import { cacheSupported, storageEstimate } from '@/lib/offline';
+import { cacheSupported, canDownload, storageEstimate } from '@/lib/offline';
 import { canPlay, playTrack, usePlayer } from '@/audio/engine';
 import { useOnline } from '@/audio/hooks';
-import { useLibrary } from '@/store/library';
+import { jamendo, useLibrary } from '@/store/library';
 import { useSettings } from '@/store/settings';
 import { Art, Chip, SongRow, Switch } from '@/components/parts';
 import { Icon } from '@/components/Icon';
 import { InstallBanner } from '@/components/Overlays';
 
+const CAROUSEL_MAX = 12;
+const HOME_LIST_MAX = 12;
+const SEARCH_DEBOUNCE_MS = 400;
 const ids = (t: Track[]) => t.map((x) => x.id);
 
 function Empty({ title, children }: { title: string; children?: React.ReactNode }) {
   return <div className="empty"><h2>{title}</h2><p>{children}</p></div>;
+}
+function Skeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="list" role="status" aria-label="Memuat">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="skeleton-row" aria-hidden="true"><span className="skeleton" /><span className="skeleton-text"><span className="skeleton" /><span className="skeleton" /></span></div>
+      ))}
+    </div>
+  );
 }
 function useTracks() {
   const tracks = useLibrary((s) => s.tracks); const status = useLibrary((s) => s.status);
@@ -23,7 +35,7 @@ function useTracks() {
 }
 function Loading({ status }: { status: string }) {
   if (status === 'error') return <Empty title="Katalog belum bisa dimuat">Cek koneksimu lalu muat ulang halaman.</Empty>;
-  if (status !== 'ready') return <div className="empty" role="status"><span className="ring" />Memuat…</div>;
+  if (status !== 'ready') return <Skeleton />;
   return null;
 }
 
@@ -31,6 +43,7 @@ export function Home() {
   const { tracks, status } = useTracks();
   const navigate = useNavigate();
   const current = usePlayer((s) => s.currentId);
+  const loadingRemote = useLibrary((s) => s.loadingRemote);
   useOnline(); useSettings((s) => s.offlineMode); useLibrary((s) => s.downloaded);
   const featured = tracks.find((t) => t.id === current) ?? tracks[0];
   return (
@@ -38,6 +51,7 @@ export function Home() {
       <h1>Mau dengar apa?</h1>
       <InstallBanner />
       <Loading status={status} />
+      {loadingRemote && <p className="caption" role="status">Memuat lagu dari Jamendo…</p>}
       {featured && (
         <div className="hero" data-genre={featured.genre}>
           <span className="overline">Mix harian · {tracks.length} lagu</span>
@@ -51,11 +65,12 @@ export function Home() {
       )}
       {!!tracks.length && <>
         <section className="section"><h2>Lanjutkan mendengarkan</h2>
-          <div className="hscroll">{tracks.map((t) => (
+          <div className="hscroll">{tracks.slice(0, CAROUSEL_MAX).map((t) => (
             <button key={t.id} type="button" className="card" disabled={!canPlay(t)} onClick={() => playTrack(t.id, ids(tracks))}>
-              <Art genre={t.genre} /><span className="wd-row__title" style={{ font: '700 15px var(--font-sans)' }}>{t.title}</span><span className="caption">{t.artist}</span>
+              <Art genre={t.genre} src={t.artwork} /><span className="wd-row__title" style={{ font: '700 15px var(--font-sans)' }}>{t.title}</span><span className="caption">{t.artist}</span>
             </button>))}</div></section>
-        <section className="section"><h2>Semua lagu</h2><div className="list">{tracks.map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>
+        <section className="section"><div className="section__head"><h2>Semua lagu</h2>{tracks.length > HOME_LIST_MAX && <Link to="/pustaka" className="section__more">Lihat semua ({tracks.length})</Link>}</div>
+          <div className="list">{tracks.slice(0, HOME_LIST_MAX).map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>
       </>}
     </div>
   );
@@ -135,7 +150,7 @@ export function Downloads() {
             : <Empty title="Belum ada unduhan">Unduh lagu di bawah supaya bisa diputar tanpa internet.</Empty>}</section>
         {!!rest.length && <section className="section"><h2>Bisa diunduh</h2><div className="list">{rest.map((t) => (
           <div key={t.id} style={{ display: 'flex', alignItems: 'center' }}><div style={{ flex: 1, minWidth: 0 }}><SongRow track={t} queue={ids(tracks)} /></div>
-            <button type="button" className="icon-btn" disabled={busy.has(t.id) || !online} aria-label={`Unduh ${t.title} (${formatSize(t.size)})`} onClick={() => void download(t)}>{busy.has(t.id) ? <span className="ring" /> : <Icon name="download" />}</button></div>))}</div></section>}
+            <button type="button" className="icon-btn" disabled={busy.has(t.id) || !online || !canDownload(t)} aria-label={canDownload(t) ? `Unduh ${t.title} (${formatSize(t.size)})` : `${t.title} tidak boleh diunduh`} onClick={() => void download(t)}>{busy.has(t.id) ? <span className="ring" /> : <Icon name="download" />}</button></div>))}</div></section>}
       </>}
     </div>
   );
@@ -144,6 +159,7 @@ export function Downloads() {
 export function Search() {
   const { tracks, status } = useTracks();
   const [q, setQ] = useState('');
+  const [found, setFound] = useState<{ term: string; ids: Set<string> }>({ term: '', ids: new Set() });
   const [lyr, setLyr] = useState<Record<string, string[]>>({});
   useEffect(() => { // muat lirik sekali untuk pencarian berbasis lirik
     if (!tracks.length) return;
@@ -151,11 +167,25 @@ export function Search() {
       .then((e) => setLyr(Object.fromEntries(e)));
   }, [tracks]);
   const term = q.trim().toLowerCase();
+  const [remote, setRemote] = useState<'idle' | 'loading' | 'error'>('idle');
+  const addTracks = useLibrary((s) => s.addTracks);
+  useEffect(() => { // pencarian katalog Jamendo (debounce + batal saat mengetik lagi)
+    const source = jamendo;
+    if (!source || term.length < 2) return;
+    const ctl = new AbortController();
+    const timer = window.setTimeout(() => {
+      setRemote('loading');
+      source.search(q.trim(), ctl.signal)
+        .then((list) => { addTracks(list); setRemote('idle'); setFound({ term, ids: new Set(list.map((t) => t.id)) }); })
+        .catch((e) => { if (!ctl.signal.aborted) { setRemote('error'); console.debug(e); } });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => { clearTimeout(timer); ctl.abort(); };
+  }, [term, q, addTracks]);
   const results = useMemo(() => !term ? [] : tracks.flatMap((t) => {
     const meta = `${t.title} ${t.artist} ${t.album}`.toLowerCase().includes(term);
     const line = (lyr[t.id] ?? []).find((l) => l.toLowerCase().includes(term));
-    return meta || line ? [{ t, line: meta ? undefined : line }] : [];
-  }), [term, tracks, lyr]);
+    return meta || line || (t.source === 'jamendo' && found.term === term && found.ids.has(t.id)) ? [{ t, line: meta ? undefined : line }] : [];
+  }), [term, tracks, lyr, found]);
   return (
     <div className="page">
       <h1>Cari</h1>
@@ -163,7 +193,9 @@ export function Search() {
         <input type="search" autoFocus aria-label="Cari lagu, artis, atau lirik" placeholder="Lagu, artis, atau potongan lirik" value={q} onChange={(e) => setQ(e.target.value)} /></label>
       <Loading status={status} />
       {!term && status === 'ready' && <Empty title="Ingat liriknya, lupa judulnya?">Ketik potongan liriknya, nanti kami carikan.</Empty>}
-      {!!term && !results.length && <Empty title="Tidak ketemu">Tidak ada hasil untuk “{q}”.</Empty>}
+      {remote === 'loading' && <p className="caption" role="status">Mencari di Jamendo…</p>}
+      {remote === 'error' && <p className="caption" role="status">Pencarian Jamendo gagal. Hasil lokal tetap ditampilkan.</p>}
+      {!!term && !results.length && remote !== 'loading' && <Empty title="Tidak ketemu">Tidak ada hasil untuk “{q}”.</Empty>}
       <div className="list">{results.map(({ t, line }) => (
         <div key={t.id}><SongRow track={t} queue={ids(results.map((r) => r.t))} />{line && <p className="snippet" style={{ padding: '0 12px 8px 72px' }}>“{line}”</p>}</div>))}</div>
     </div>

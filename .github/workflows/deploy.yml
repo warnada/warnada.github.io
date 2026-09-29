@@ -26,6 +26,9 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+        env:
+          VITE_JAMENDO_CLIENT_ID: ${{ vars.JAMENDO_CLIENT_ID }}
+          VITE_JAMENDO_LICENSE_POLICY: ${{ vars.JAMENDO_LICENSE_POLICY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

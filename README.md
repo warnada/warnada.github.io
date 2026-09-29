@@ -25,6 +25,18 @@ npm run preview    # uji PWA/offline di http://localhost:4173
 npm test && npm run lint
 ```
 
+## Integrasi Jamendo (musik nyata)
+
+Katalog demo digabung dengan lagu Creative Commons dari [Jamendo](https://devportal.jamendo.com): populer per genre saat aplikasi dibuka, dan pencarian langsung ke Jamendo di halaman Cari.
+
+- Atur `VITE_JAMENDO_CLIENT_ID` (lihat `.env.example`; lokal di `.env.local`). Kosong = hanya katalog demo.
+- Di CI, isi **Settings → Secrets and variables → Actions → Variables**: `JAMENDO_CLIENT_ID` dan (opsional) `JAMENDO_LICENSE_POLICY`.
+- `VITE_JAMENDO_LICENSE_POLICY`: `all` (bawaan; Warnada non-komersial, jadi lagu CC-NC ikut) atau `commercial` (membuang lagu NC). **Ganti ke `commercial` sebelum menambah iklan atau langganan.** Atribusi lisensi selalu ditampilkan.
+- Atribusi (penyedia + lisensi CC, tertaut) tampil di layar pemutar. Lagu yang melarang unduhan tidak bisa diunduh.
+- Respons Jamendo diperlakukan sebagai data tidak tepercaya (`src/lib/jamendo.ts`): entri rusak dilewati, URL audio/gambar hanya dari domain Jamendo lewat HTTPS. Domain yang sama harus tercantum di CSP (`vite.config.ts`) dan service worker (`src/sw/sw.ts`).
+- Lirik tersinkron tidak disediakan Jamendo, jadi lagu Jamendo menampilkan "Lirik belum tersedia".
+- Client ID Jamendo memang publik (ikut terkirim ke browser); jangan gunakan kredensial rahasia di sini.
+
 ## Katalog & audio demo
 
 `public/catalog.json` berisi 8 lagu demo (satu per genre). Audio **disintesis** oleh `scripts/generate-audio.mjs` dan liriknya karangan sendiri (`scripts/tracks.mjs`), sehingga bebas hak cipta. Jalankan `npm run gen:audio` untuk membuat ulang.

@@ -1,6 +1,7 @@
 import type { Track } from './types';
 import { parseLrc, type LyricLine } from './lrc';
 import { parseCatalog } from './validate';
+import { mediaUrl } from './media';
 
 /**
  * Sumber katalog. Saat ini berkas statis; untuk backend nanti cukup ganti
@@ -20,6 +21,7 @@ export const staticCatalog: CatalogSource = {
     return parseCatalog(await res.json());
   },
   async lyrics(track) {
+    if (!track.lyrics) return [];
     const res = await fetch(url(track.lyrics));
     if (!res.ok) throw new Error(`lyrics ${res.status}`);
     return parseLrc(await res.text());
@@ -27,6 +29,7 @@ export const staticCatalog: CatalogSource = {
 };
 
 export const assetUrl = url;
+export { mediaUrl };
 const lyricCache = new Map<string, Promise<LyricLine[]>>();
 export function loadLyrics(track: Track): Promise<LyricLine[]> {
   let p = lyricCache.get(track.id);

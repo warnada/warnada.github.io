@@ -4,7 +4,7 @@ import { CatalogError, parseCatalog, sanitizeSettings } from './validate';
 const ok = { id: 'x', title: 'T', artist: 'A', album: 'B', genre: 'pop', duration: 10, audio: 'audio/x.mp3', lyrics: 'lyrics/x.lrc', size: 100 };
 
 describe('parseCatalog', () => {
-  it('menerima katalog valid', () => expect(parseCatalog({ tracks: [ok] })).toEqual([ok]));
+  it('menerima katalog valid', () => expect(parseCatalog({ tracks: [ok] })).toEqual([{ ...ok, source: 'demo' }]));
   it('menolak bentuk yang salah', () => {
     expect(() => parseCatalog(null)).toThrow(CatalogError);
     expect(() => parseCatalog({ tracks: 'x' })).toThrow(CatalogError);

@@ -32,7 +32,7 @@ export function parseCatalog(json: unknown): Track[] {
     if (typeof raw.genre !== 'string' || !(GENRES as readonly string[]).includes(raw.genre)) throw new CatalogError(`genre tidak dikenal pada ${id}`);
     return {
       id, title: str(raw.title, 'title'), artist: str(raw.artist, 'artist'), album: str(raw.album, 'album'), genre: raw.genre as Genre,
-      duration: num(raw.duration, 'duration'), size: num(raw.size, 'size'), audio: relPath(raw.audio, 'audio'), lyrics: relPath(raw.lyrics, 'lyrics')
+      duration: num(raw.duration, 'duration'), size: num(raw.size, 'size'), audio: relPath(raw.audio, 'audio'), lyrics: relPath(raw.lyrics, 'lyrics'), source: 'demo'
     };
   });
 }

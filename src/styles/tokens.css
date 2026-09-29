@@ -170,3 +170,11 @@
 :root[data-theme="light"][data-genre="dangdut"], :root[data-theme="light"] [data-genre="dangdut"] { --surface-base: #FBF1F6; --accent: #A0005A; }
 :root[data-theme="light"][data-genre="akustik"], :root[data-theme="light"] [data-genre="akustik"] { --surface-base: #F2F5EE; --accent: #3E6B35; }
 :root[data-theme="light"][data-genre="klasik"], :root[data-theme="light"] [data-genre="klasik"] { --surface-base: #F5F3EE; --accent: #6B4E00; }
+
+/* Daftarkan warna dinamis agar pergantian genre/tema berpindah halus (crossfade), bukan melompat. */
+@property --mesh-1 { syntax: '<color>'; inherits: true; initial-value: #6D4AFF; }
+@property --mesh-2 { syntax: '<color>'; inherits: true; initial-value: #FF6B4A; }
+@property --mesh-3 { syntax: '<color>'; inherits: true; initial-value: #16B8A6; }
+@property --mesh-4 { syntax: '<color>'; inherits: true; initial-value: #E0409A; }
+@property --surface-base { syntax: '<color>'; inherits: true; initial-value: #0D0A18; }
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #B9A6FF; }

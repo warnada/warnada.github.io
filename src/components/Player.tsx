@@ -93,7 +93,7 @@ export function MiniPlayer() {
   return (
     <div className="mini wd-glass wd-glass--raised">
       <Link to="/putar" className="mini__open" aria-label={`Buka pemutar: ${track.title}`}>
-        <Art genre={track.genre} />
+        <Art genre={track.genre} src={track.artwork} />
         <span className="wd-row__text"><span className="wd-row__title">{track.title}</span><span className="wd-row__meta">{track.artist}</span></span>
       </Link>
       <button type="button" className="icon-btn" aria-label={playing ? 'Jeda' : 'Putar'} onClick={toggle}><Icon name={playing ? 'pause' : 'play'} /></button>
@@ -112,7 +112,7 @@ export function PlayerBar() {
   return (
     <div className="playerbar wd-glass wd-glass--raised">
       <button type="button" className="playerbar__now" onClick={() => navigate('/putar')} aria-label={`Buka pemutar: ${track.title}`}>
-        <Art genre={track.genre} />
+        <Art genre={track.genre} src={track.artwork} />
         <span className="wd-row__text"><span className="wd-row__title">{track.title}</span><span className="wd-row__meta">{track.artist}</span></span>
       </button>
       <div className="playerbar__mid"><Transport /><div className="playerbar__seek"><Progress compact /></div></div>
@@ -131,7 +131,7 @@ export function LyricPanel() {
   return (
     <aside className="lyricpanel wd-glass" aria-label="Lirik lagu">
       <div className="full__head" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <Art genre={track.genre} className="wd-row__art" />
+        <Art genre={track.genre} src={track.artwork} className="wd-row__art" />
         <div><strong>{track.title}</strong><div className="caption">{track.artist}</div></div>
       </div>
       <Lyrics />
