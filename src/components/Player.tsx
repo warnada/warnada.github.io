@@ -75,7 +75,7 @@ export function Lyrics({ className = '' }: { className?: string }) {
     <div ref={box} className={`full__lyrics ${className}`} aria-label="Lirik" tabIndex={0}>
       <div className="wd-lyrics">
         {lines === null ? <p className="none">Memuat lirik…</p>
-          : !lines.length ? <p className="none">Lirik belum tersedia untuk lagu ini.</p>
+          : !lines.length ? <p className="none">Lagu ini belum punya lirik tersinkron.</p>
           : lines.map((l, i) => (
             <p key={i} aria-current={i === idx ? 'true' : undefined} className={i < idx ? 'is-sung' : undefined} onClick={() => seek(l.time)}>{l.text || '♪'}</p>
           ))}

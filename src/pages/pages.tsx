@@ -7,6 +7,8 @@ import { cacheSupported, canDownload, storageEstimate } from '@/lib/offline';
 import { canPlay, playTrack, usePlayer } from '@/audio/engine';
 import { useOnline } from '@/audio/hooks';
 import { jamendo, useLibrary } from '@/store/library';
+import { useSession } from '@/store/session';
+import { matchTrack } from '@/lib/search';
 import { useSettings } from '@/store/settings';
 import { Art, Chip, SongRow, Switch } from '@/components/parts';
 import { Icon } from '@/components/Icon';
@@ -29,12 +31,28 @@ function Skeleton({ rows = 6 }: { rows?: number }) {
     </div>
   );
 }
+/** Muncul saat offline / Mode offline aktif, supaya lagu yang nonaktif tidak terlihat rusak. */
+function OfflineNotice() {
+  const online = useOnline();
+  const offlineMode = useSettings((s) => s.offlineMode);
+  if (online && !offlineMode) return null;
+  return (
+    <div className="banner wd-glass wd-glass--raised" role="status">
+      <Icon name="wifioff" width={24} height={24} />
+      <p>{online ? 'Mode offline aktif.' : 'Kamu sedang offline.'} Hanya lagu yang sudah diunduh yang bisa diputar.</p>
+      <Link to="/unduhan" className="wd-btn wd-btn--ghost">Unduhan</Link>
+    </div>
+  );
+}
 function useTracks() {
   const tracks = useLibrary((s) => s.tracks); const status = useLibrary((s) => s.status);
   return { tracks, status };
 }
 function Loading({ status }: { status: string }) {
-  if (status === 'error') return <Empty title="Katalog belum bisa dimuat">Cek koneksimu lalu muat ulang halaman.</Empty>;
+  if (status === 'error') return (
+    <div className="empty" role="alert"><h2>Katalog belum bisa dimuat</h2><p>Cek koneksimu, lalu coba lagi.</p>
+      <button type="button" className="wd-btn wd-btn--accent" onClick={() => void useLibrary.getState().retry()}>Coba lagi</button></div>
+  );
   if (status !== 'ready') return <Skeleton />;
   return null;
 }
@@ -44,11 +62,15 @@ export function Home() {
   const navigate = useNavigate();
   const current = usePlayer((s) => s.currentId);
   const loadingRemote = useLibrary((s) => s.loadingRemote);
+  const history = useSession((s) => s.history);
   useOnline(); useSettings((s) => s.offlineMode); useLibrary((s) => s.downloaded);
   const featured = tracks.find((t) => t.id === current) ?? tracks[0];
+  const recent = history.flatMap((id) => tracks.find((t) => t.id === id) ?? []).slice(0, CAROUSEL_MAX);
+  const shelf = recent.length ? recent : tracks.slice(0, CAROUSEL_MAX);
   return (
     <div className="page">
       <h1>Mau dengar apa?</h1>
+      <OfflineNotice />
       <InstallBanner />
       <Loading status={status} />
       {loadingRemote && <p className="caption" role="status">Memuat lagu dari Jamendo…</p>}
@@ -64,8 +86,8 @@ export function Home() {
         </div>
       )}
       {!!tracks.length && <>
-        <section className="section"><h2>Lanjutkan mendengarkan</h2>
-          <div className="hscroll">{tracks.slice(0, CAROUSEL_MAX).map((t) => (
+        <section className="section"><h2>{recent.length ? 'Lanjutkan mendengarkan' : 'Populer'}</h2>
+          <div className="hscroll">{shelf.map((t) => (
             <button key={t.id} type="button" className="card" disabled={!canPlay(t)} onClick={() => playTrack(t.id, ids(tracks))}>
               <Art genre={t.genre} src={t.artwork} /><span className="wd-row__title" style={{ font: '700 15px var(--font-sans)' }}>{t.title}</span><span className="caption">{t.artist}</span>
             </button>))}</div></section>
@@ -110,6 +132,7 @@ export function Library() {
         <Chip active={f === 'offline'} onClick={() => setF('offline')}>Offline</Chip>
         {GENRES.map((g) => <Chip key={g} active={f === g} onClick={() => setF(g)}>{GENRE_LABEL[g]}</Chip>)}
       </div>
+      <OfflineNotice />
       <Loading status={status} />
       {status === 'ready' && (list.length ? <div className="list">{list.map((t) => <SongRow key={t.id} track={t} queue={ids(list)} showAlbum />)}</div>
         : <Empty title="Belum ada lagu di sini">{f === 'offline' ? 'Unduh lagu supaya bisa didengar tanpa internet.' : 'Coba filter lain.'}</Empty>)}
@@ -182,17 +205,22 @@ export function Search() {
     return () => { clearTimeout(timer); ctl.abort(); };
   }, [term, q, addTracks]);
   const results = useMemo(() => !term ? [] : tracks.flatMap((t) => {
-    const meta = `${t.title} ${t.artist} ${t.album}`.toLowerCase().includes(term);
-    const line = (lyr[t.id] ?? []).find((l) => l.toLowerCase().includes(term));
-    return meta || line || (t.source === 'jamendo' && found.term === term && found.ids.has(t.id)) ? [{ t, line: meta ? undefined : line }] : [];
+    const m = matchTrack(t, term, lyr[t.id] ?? []);
+    if (m) return [{ t, line: m.kind === 'lyric' ? m.line : undefined }];
+    return t.source === 'jamendo' && found.term === term && found.ids.has(t.id) ? [{ t, line: undefined }] : [];
   }), [term, tracks, lyr, found]);
   return (
     <div className="page">
       <h1>Cari</h1>
       <label className="wd-search"><Icon name="search" width={20} height={20} />
-        <input type="search" autoFocus aria-label="Cari lagu, artis, atau lirik" placeholder="Lagu, artis, atau potongan lirik" value={q} onChange={(e) => setQ(e.target.value)} /></label>
+        <input type="search" autoFocus aria-label="Cari lagu, artis, atau lirik" placeholder="Lagu, artis, atau potongan lirik" value={q} onChange={(e) => setQ(e.target.value)} />
+        {q && <button type="button" className="icon-btn search-clear" aria-label="Hapus pencarian" onClick={() => setQ('')}><Icon name="close" width={18} height={18} /></button>}</label>
       <Loading status={status} />
-      {!term && status === 'ready' && <Empty title="Ingat liriknya, lupa judulnya?">Ketik potongan liriknya, nanti kami carikan.</Empty>}
+      {!term && status === 'ready' && <>
+        <Empty title="Ingat liriknya, lupa judulnya?">Ketik potongan liriknya, nanti kami carikan.</Empty>
+        <div className="chips chips--center" role="group" aria-label="Coba cari genre">{GENRES.map((g) => <Chip key={g} active={false} onClick={() => setQ(GENRE_LABEL[g])}>{GENRE_LABEL[g]}</Chip>)}</div>
+      </>}
+      {!!term && !!results.length && <p className="caption" role="status">{results.length} hasil</p>}
       {remote === 'loading' && <p className="caption" role="status">Mencari di Jamendo…</p>}
       {remote === 'error' && <p className="caption" role="status">Pencarian Jamendo gagal. Hasil lokal tetap ditampilkan.</p>}
       {!!term && !results.length && remote !== 'loading' && <Empty title="Tidak ketemu">Tidak ada hasil untuk “{q}”.</Empty>}

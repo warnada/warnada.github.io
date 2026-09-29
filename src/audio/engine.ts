@@ -4,6 +4,7 @@ import { assetUrl, mediaUrl } from '@/lib/catalog';
 import { pickNext, type Repeat } from '@/lib/queue';
 import { useLibrary } from '@/store/library';
 import { useSettings } from '@/store/settings';
+import { useSession } from '@/store/session';
 import { toast } from '@/store/ui';
 
 
@@ -37,6 +38,7 @@ export function playTrack(id: string, queue?: string[]) {
   if (queue) usePlayer.setState({ queue });
   else if (!usePlayer.getState().queue.includes(id)) usePlayer.setState({ queue: [id] });
   usePlayer.setState({ currentId: id, buffering: true });
+  useSession.getState().played(id);
   audio.src = mediaUrl(t.audio);
   void audio.play().catch(() => { usePlayer.setState({ playing: false, buffering: false }); });
   setSession(t);
@@ -47,6 +49,7 @@ export function toggle() {
   if (!currentId) return;
   if (audio.paused) void audio.play().catch(() => toast('Tidak bisa memutar lagu ini.')); else audio.pause();
 }
+export const seekBy = (delta: number) => seek(audio.currentTime + delta);
 export const seek = (sec: number) => { if (Number.isFinite(sec)) audio.currentTime = Math.max(0, Math.min(sec, audio.duration || sec)); };
 
 function step(dir: 1 | -1, auto = false) {
@@ -67,15 +70,40 @@ audio.addEventListener('pause', () => usePlayer.setState({ playing: false }));
 audio.addEventListener('waiting', () => usePlayer.setState({ buffering: true }));
 audio.addEventListener('playing', () => usePlayer.setState({ buffering: false, playing: true }));
 audio.addEventListener('durationchange', () => usePlayer.setState({ duration: Number.isFinite(audio.duration) ? audio.duration : 0 }));
-audio.addEventListener('ended', () => step(1, true));
+audio.addEventListener('ended', () => { const id = usePlayer.getState().currentId; if (id) useSession.getState().remember(id, 0); step(1, true); });
 audio.addEventListener('error', () => {
   usePlayer.setState({ playing: false, buffering: false });
   toast(isOffline() ? 'Lagu ini belum diunduh.' : 'Lagu gagal dimuat. Coba lagi.');
 });
+const SAVE_EVERY_MS = 5000;
+let lastSaved = 0;
+function savePosition(force = false) {
+  const id = usePlayer.getState().currentId;
+  const now = Date.now();
+  if (!id || (!force && now - lastSaved < SAVE_EVERY_MS)) return;
+  lastSaved = now;
+  useSession.getState().remember(id, audio.currentTime);
+}
+audio.addEventListener('pause', () => savePosition(true));
+addEventListener('pagehide', () => savePosition(true));
+document.addEventListener('visibilitychange', () => { if (document.hidden) savePosition(true); });
 audio.addEventListener('timeupdate', () => {
+  savePosition();
   if (!('mediaSession' in navigator) || !audio.duration) return;
   try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: audio.currentTime, playbackRate: audio.playbackRate }); } catch { /* abaikan */ }
 });
+
+/** Pulihkan lagu terakhir (dalam keadaan jeda) di posisi terakhirnya. false = tidak ada yang bisa dipulihkan. */
+export function restoreLast(): boolean {
+  const { last } = useSession.getState();
+  const t = last ? trackById(last.id) : undefined;
+  if (!last || !t || usePlayer.getState().currentId || !canPlay(t)) return false;
+  usePlayer.setState({ currentId: t.id, queue: useLibrary.getState().tracks.map((x) => x.id) });
+  audio.src = mediaUrl(t.audio);
+  audio.addEventListener('loadedmetadata', () => { audio.currentTime = Math.min(last.position, audio.duration || last.position); }, { once: true });
+  setSession(t);
+  return true;
+}
 
 function setSession(t: Track) {
   if (!('mediaSession' in navigator)) return;

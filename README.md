@@ -8,7 +8,10 @@ Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan 
 - **Offline**: service worker (Workbox) menyimpan app shell; tombol *Unduh* menyimpan audio + lirik ke Cache Storage. Seek tetap jalan offline berkat dukungan Range request. *Mode offline* hanya memutar lagu yang sudah diunduh.
 - **Bisa dipasang**: web app manifest, ikon maskable, shortcut, banner pasang (Android/desktop) dan petunjuk iOS.
 - **Update aman**: versi baru menunggu persetujuan lewat toast "Muat ulang".
-- **Cari** berdasarkan judul, artis, album, atau **potongan lirik**.
+- **Cari** berdasarkan judul, artis, album, genre, atau **potongan lirik**.
+- **Melanjutkan**: riwayat putar dan lagu terakhir (beserta posisinya) dipulihkan saat aplikasi dibuka, dalam keadaan jeda.
+- **Pintasan keyboard**: Spasi putar/jeda, ←/→ ±5 detik, N/P berikutnya/sebelumnya, Esc menutup pemutar.
+- **Offline yang jelas**: banner saat offline, dan lagu yang belum diunduh diberi keterangan "Belum diunduh".
 - Responsif: bottom nav (HP) → rail (tablet) → sidebar + panel lirik (desktop). Menghormati `prefers-reduced-motion` dan `prefers-reduced-transparency`.
 
 ## Stack

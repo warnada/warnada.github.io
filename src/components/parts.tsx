@@ -33,7 +33,7 @@ export function SongRow({ track, queue, showAlbum }: { track: Track; queue: stri
       <Art genre={track.genre} src={track.artwork} className="wd-row__art" />
       <span className="wd-row__text">
         <span className="wd-row__title">{track.title}</span>
-        <span className="wd-row__meta">{track.artist} · {showAlbum ? track.album : formatTime(track.duration)}</span>
+        <span className="wd-row__meta">{track.artist} · {!playable ? 'Belum diunduh' : showAlbum ? track.album : formatTime(track.duration)}</span>
       </span>
       <span className="wd-row__end">{downloaded && <Icon name="check" aria-label="Tersedia offline" role="img" />}</span>
     </button>
