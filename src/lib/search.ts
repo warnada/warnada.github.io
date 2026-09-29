@@ -48,6 +48,14 @@ export function splitHighlight(text: string, term: string): Segment[] {
   return out.length ? out : [{ text, hit: false }];
 }
 
+/** Nama event untuk meminta halaman Cari memfokuskan kolomnya (klik menu Cari saat sudah berada di sana). */
+export const FOCUS_SEARCH_EVENT = 'warnada:focus-search';
+
+/** Fokus otomatis hanya saat Cari dibuka polos (dari menu). Bila URL sudah membawa tujuan (genre/kata), jangan tutupi hasil dengan keyboard. */
+export function shouldAutofocus(params: URLSearchParams): boolean {
+  return !readGenre(params.get('genre')) && !params.get('q')?.trim();
+}
+
 /** Nilai genre dari URL: hanya yang dikenal, selain itu null. */
 export function readGenre(value: string | null): Genre | null {
   return GENRES.find((g) => g === value) ?? null;

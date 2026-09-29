@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RECENT_MAX, matchTrack, pushRecent, readGenre, splitHighlight } from './search';
+import { RECENT_MAX, matchTrack, pushRecent, readGenre, shouldAutofocus, splitHighlight } from './search';
 import type { Track } from './types';
 
 const track: Track = { id: 'a', title: 'Rinai Senja', artist: 'Sore Pelan', album: 'Hujan di Jendela', genre: 'jazz', duration: 1, audio: 'x', lyrics: null, size: 1, source: 'demo' };
@@ -62,5 +62,20 @@ describe('readGenre', () => {
     expect(readGenre('')).toBeNull();
     expect(readGenre(null)).toBeNull();
     expect(readGenre('<script>')).toBeNull();
+  });
+});
+
+describe('shouldAutofocus', () => {
+  it('fokus saat halaman Cari dibuka polos (dari menu)', () => {
+    expect(shouldAutofocus(new URLSearchParams(''))).toBe(true);
+  });
+  it('tidak fokus bila datang dengan tujuan (genre atau kata sudah ada di URL)', () => {
+    expect(shouldAutofocus(new URLSearchParams('genre=jazz'))).toBe(false);
+    expect(shouldAutofocus(new URLSearchParams('q=hujan'))).toBe(false);
+    expect(shouldAutofocus(new URLSearchParams('q=hujan&genre=jazz'))).toBe(false);
+  });
+  it('genre tidak valid dianggap tidak ada, dan q kosong diabaikan', () => {
+    expect(shouldAutofocus(new URLSearchParams('genre=metal'))).toBe(true);
+    expect(shouldAutofocus(new URLSearchParams('q=%20%20'))).toBe(true);
   });
 });
