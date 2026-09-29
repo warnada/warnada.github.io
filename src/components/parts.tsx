@@ -3,7 +3,7 @@ import { Fragment, type ReactNode } from 'react';
 import type { Genre, Track } from '@/lib/types';
 import { GENRES, GENRE_LABEL } from '@/lib/types';
 import { formatTime } from '@/lib/format';
-import { splitHighlight } from '@/lib/search';
+import { FOCUS_SEARCH_EVENT, splitHighlight } from '@/lib/search';
 import { canPlay, playTrack, usePlayer } from '@/audio/engine';
 import { useLibrary } from '@/store/library';
 import { useOnline } from '@/audio/hooks';
@@ -81,13 +81,16 @@ const NAV = [
   { to: '/pustaka', label: 'Pustaka', icon: 'library' as const },
   { to: '/unduhan', label: 'Unduhan', icon: 'download' as const }
 ];
+/** Klik menu Cari saat sudah di halaman Cari: fokuskan ulang kolomnya (saat datang dari halaman lain, halaman itu fokus sendiri saat dibuka). */
+const focusSearch = () => window.dispatchEvent(new Event(FOCUS_SEARCH_EVENT));
+
 export function Nav() {
   return (
     <nav className="shell__nav" aria-label="Utama">
       <div className="brand-full"><img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />warnada</div>
       <div className="wd-nav">
         {NAV.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.to === '/'}>
+          <NavLink key={n.to} to={n.to} end={n.to === '/'} onClick={n.to === '/cari' ? focusSearch : undefined}>
             <span><Icon name={n.icon} width={22} height={22} /></span>{n.label}
           </NavLink>
         ))}

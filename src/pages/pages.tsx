@@ -8,7 +8,7 @@ import { canPlay, playTrack, toggle, usePlayer } from '@/audio/engine';
 import { useOnline } from '@/audio/hooks';
 import { jamendo, useLibrary } from '@/store/library';
 import { useSession } from '@/store/session';
-import { matchTrack, readGenre } from '@/lib/search';
+import { FOCUS_SEARCH_EVENT, matchTrack, readGenre, shouldAutofocus } from '@/lib/search';
 import { greetingFor, quickPicks } from '@/lib/home';
 import { useSettings } from '@/store/settings';
 import { Art, Chip, Highlight, SongRow, Switch } from '@/components/parts';
@@ -268,7 +268,14 @@ export function Search() {
   const onKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Escape') { if (q) setQ(''); else inputRef.current?.blur(); } };
   const pickRecent = (t: string) => { setQ(t); inputRef.current?.focus(); };
   const counts = useMemo(() => Object.fromEntries(GENRES.map((g) => [g, tracks.filter((t) => t.genre === g).length])) as Record<Genre, number>, [tracks]);
-  const desktop = typeof matchMedia !== 'undefined' && matchMedia('(pointer:fine)').matches;
+  useEffect(() => { // dibuka dari menu = langsung siap mengetik; tujuan lain (genre/kata di URL) tidak dipaksa
+    if (shouldAutofocus(new URLSearchParams(window.location.search))) inputRef.current?.focus();
+  }, []);
+  useEffect(() => { // klik menu Cari saat sudah di halaman ini
+    const focus = () => inputRef.current?.focus();
+    addEventListener(FOCUS_SEARCH_EVENT, focus);
+    return () => removeEventListener(FOCUS_SEARCH_EVENT, focus);
+  }, []);
 
   return (
     <div className="page search">
@@ -276,7 +283,7 @@ export function Search() {
       <div className="searchhead">
         <form role="search" onSubmit={submit}>
           <label className="wd-search"><Icon name="search" width={20} height={20} />
-            <input ref={inputRef} type="search" enterKeyHint="search" autoComplete="off" autoFocus={desktop} aria-label="Cari lagu, artis, atau lirik" placeholder="Lagu, artis, atau potongan lirik" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKeyDown} />
+            <input ref={inputRef} type="search" enterKeyHint="search" autoComplete="off" aria-label="Cari lagu, artis, atau lirik" placeholder="Lagu, artis, atau potongan lirik" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKeyDown} />
             {q && <button type="button" className="icon-btn search-clear" aria-label="Hapus pencarian" onClick={() => { setQ(''); inputRef.current?.focus(); }}><Icon name="close" width={18} height={18} /></button>}</label>
         </form>
         <div className="chips" role="group" aria-label="Filter genre">
