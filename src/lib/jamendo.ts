@@ -3,6 +3,9 @@ import { GENRES, type Genre, type License, type Track } from './types';
 /** Kebijakan lisensi: 'commercial' hanya lagu tanpa klausul NC (aman untuk layanan berbayar/beriklan). */
 export type LicensePolicy = 'commercial' | 'all';
 
+/** Warnada non-komersial, jadi bawaan 'all'. Ubah ke 'commercial' bila aplikasi nanti dimonetisasi. */
+export const parseLicensePolicy = (v: unknown): LicensePolicy => (v === 'commercial' ? 'commercial' : 'all');
+
 const API = 'https://api.jamendo.com/v3.0/tracks/';
 const MAX_LIMIT = 50;
 const BYTES_PER_SECOND = 24_000; // perkiraan MP3 VBR mp32; API tidak memberi ukuran berkas

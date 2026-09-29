@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { GENRES, GENRE_LABEL, type Genre, type Track } from '@/lib/types';
 import { formatSize } from '@/lib/format';
 import { loadLyrics } from '@/lib/catalog';
@@ -13,11 +13,21 @@ import { Icon } from '@/components/Icon';
 import { InstallBanner } from '@/components/Overlays';
 
 const CAROUSEL_MAX = 12;
+const HOME_LIST_MAX = 12;
 const SEARCH_DEBOUNCE_MS = 400;
 const ids = (t: Track[]) => t.map((x) => x.id);
 
 function Empty({ title, children }: { title: string; children?: React.ReactNode }) {
   return <div className="empty"><h2>{title}</h2><p>{children}</p></div>;
+}
+function Skeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="list" role="status" aria-label="Memuat">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="skeleton-row" aria-hidden="true"><span className="skeleton" /><span className="skeleton-text"><span className="skeleton" /><span className="skeleton" /></span></div>
+      ))}
+    </div>
+  );
 }
 function useTracks() {
   const tracks = useLibrary((s) => s.tracks); const status = useLibrary((s) => s.status);
@@ -25,7 +35,7 @@ function useTracks() {
 }
 function Loading({ status }: { status: string }) {
   if (status === 'error') return <Empty title="Katalog belum bisa dimuat">Cek koneksimu lalu muat ulang halaman.</Empty>;
-  if (status !== 'ready') return <div className="empty" role="status"><span className="ring" />Memuat…</div>;
+  if (status !== 'ready') return <Skeleton />;
   return null;
 }
 
@@ -59,7 +69,8 @@ export function Home() {
             <button key={t.id} type="button" className="card" disabled={!canPlay(t)} onClick={() => playTrack(t.id, ids(tracks))}>
               <Art genre={t.genre} src={t.artwork} /><span className="wd-row__title" style={{ font: '700 15px var(--font-sans)' }}>{t.title}</span><span className="caption">{t.artist}</span>
             </button>))}</div></section>
-        <section className="section"><h2>Semua lagu</h2><div className="list">{tracks.map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>
+        <section className="section"><div className="section__head"><h2>Semua lagu</h2>{tracks.length > HOME_LIST_MAX && <Link to="/pustaka" className="section__more">Lihat semua ({tracks.length})</Link>}</div>
+          <div className="list">{tracks.slice(0, HOME_LIST_MAX).map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>
       </>}
     </div>
   );

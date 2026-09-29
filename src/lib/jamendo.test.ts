@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GENRE_TAGS, buildTracksUrl, isCommercialLicense, isTrustedMediaUrl, parseJamendoTracks } from './jamendo';
+import { GENRE_TAGS, buildTracksUrl, isCommercialLicense, isTrustedMediaUrl, parseJamendoTracks, parseLicensePolicy } from './jamendo';
 
 // Fixture mengikuti skema publik Jamendo API v3.0 (results[].audio, license_ccurl, dst.).
 // CATATAN: belum diverifikasi terhadap respons langsung; jalankan `npm run check:jamendo` dengan koneksi internet.
@@ -81,3 +81,13 @@ describe('buildTracksUrl', () => {
 describe('GENRE_TAGS', () => it('mencakup semua genre aplikasi', () => {
   expect(Object.keys(GENRE_TAGS).sort()).toEqual(['akustik', 'dangdut', 'edm', 'jazz', 'klasik', 'lofi', 'pop', 'rock']);
 }));
+
+describe('parseLicensePolicy', () => {
+  it('bawaan all (Warnada non-komersial); commercial hanya bila diminta eksplisit', () => {
+    expect(parseLicensePolicy(undefined)).toBe('all');
+    expect(parseLicensePolicy('')).toBe('all');
+    expect(parseLicensePolicy('ngawur')).toBe('all');
+    expect(parseLicensePolicy('all')).toBe('all');
+    expect(parseLicensePolicy('commercial')).toBe('commercial');
+  });
+});

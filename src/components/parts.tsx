@@ -11,7 +11,7 @@ import { Icon } from './Icon';
 
 export const Art = ({ genre, src, className = '' }: { genre: Genre; src?: string; className?: string }) => (
   <div className={`wd-art ${className}`} data-genre={genre} aria-hidden="true">
-    {src && <img src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" />}
+    {src && <img src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onLoad={(e) => e.currentTarget.classList.add('is-loaded')} onError={(e) => e.currentTarget.remove()} />}
   </div>
 );
 

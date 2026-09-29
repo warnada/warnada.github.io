@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import { useSettings } from '@/store/settings';
 import { useLibrary } from '@/store/library';
@@ -26,12 +26,24 @@ function useApplyTheme() {
   }, [active, theme]);
 }
 
-function TopBar() {
+function useScrolled(sentinel: React.RefObject<HTMLElement | null>): boolean {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setScrolled(!e.isIntersecting), { threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [sentinel]);
+  return scrolled;
+}
+
+function TopBar({ scrolled }: { scrolled: boolean }) {
   const { theme, set } = useSettings();
   const { canPrompt, install } = useInstall();
   const online = useOnline();
   return (
-    <header className="topbar">
+    <header className={`topbar ${scrolled ? 'is-scrolled' : ''}`}>
       <Link to="/" className="topbar__brand"><img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />warnada</Link>
       {!online && <span className="overline" role="status"><Icon name="wifioff" width={16} height={16} style={{ verticalAlign: '-3px' }} /> Offline</span>}
       {canPrompt && <button type="button" className="wd-btn wd-btn--solid" onClick={install}><Icon name="install" />Pasang</button>}
@@ -45,12 +57,15 @@ function TopBar() {
 function Shell() {
   const hasTrack = usePlayer((s) => !!s.currentId);
   const { pathname } = useLocation();
+  const sentinel = useRef<HTMLDivElement>(null);
+  const scrolled = useScrolled(sentinel);
   useEffect(() => { document.querySelector('.shell__main')?.scrollTo(0, 0); }, [pathname]);
   return (
     <div className="shell wd-stage">
       <Nav />
       <main className={`shell__main ${hasTrack ? '' : 'shell__main--nomini'}`}>
-        <TopBar />
+        <div ref={sentinel} className="topbar-sentinel" aria-hidden="true" />
+        <TopBar scrolled={scrolled} />
         <Routes>
           <Route index element={<Home />} />
           <Route path="jelajah" element={<Explore />} />

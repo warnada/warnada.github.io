@@ -10,6 +10,7 @@ import { GENRE_LABEL } from '@/lib/types';
 export default function PlayerPage() {
   const navigate = useNavigate();
   const id = usePlayer((s) => s.currentId);
+  const playing = usePlayer((s) => s.playing);
   useLibrary((s) => s.tracks);
   const track = id ? currentTrack() : undefined;
   const [lyricsView, setLyricsView] = useState(false);
@@ -29,7 +30,7 @@ export default function PlayerPage() {
       </div>
       <div className="full__body">
         <div className="full__head">
-          <Art genre={track.genre} src={track.artwork} className="full__art" />
+          <Art genre={track.genre} src={track.artwork} className={`full__art ${playing ? '' : 'is-paused'}`} />
           <div className="full__meta"><div><h1>{track.title}</h1><p className="muted">{track.artist} · {track.album}</p></div></div>
         </div>
         {lyricsView ? <Lyrics /> : <div style={{ flex: 1, minHeight: 0, display: 'flex' }}><div style={{ flex: 1, minHeight: 0, display: 'flex' }}><LyricsPreview /></div></div>}
