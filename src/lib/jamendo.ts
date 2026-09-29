@@ -92,7 +92,8 @@ async function getJson(url: string, signal?: AbortSignal): Promise<unknown> {
 export interface JamendoSource {
   /** Lagu populer untuk tiap genre (gagal per genre tidak menggagalkan yang lain). */
   featured(perGenre: number, signal?: AbortSignal): Promise<Track[]>;
-  search(query: string, signal?: AbortSignal): Promise<Track[]>;
+  /** Dengan genre, hasil dibatasi tag genre itu sehingga genre setiap lagu diketahui. */
+  search(query: string, signal?: AbortSignal, genre?: Genre): Promise<Track[]>;
 }
 
 export function createJamendoSource(clientId: string, policy: LicensePolicy): JamendoSource {
@@ -102,9 +103,10 @@ export function createJamendoSource(clientId: string, policy: LicensePolicy): Ja
         parseJamendoTracks(await getJson(buildTracksUrl(clientId, { tags: GENRE_TAGS[genre], limit: perGenre }), signal), { genre, policy })));
       return settled.flatMap((s) => (s.status === 'fulfilled' ? s.value : []));
     },
-    async search(query, signal) {
-      // genre hasil pencarian tidak diketahui; 'pop' hanya penentu warna sampul cadangan
-      return parseJamendoTracks(await getJson(buildTracksUrl(clientId, { search: query, limit: 20 }), signal), { genre: 'pop', policy });
+    async search(query, signal, genre) {
+      // tanpa genre, genre hasil tidak diketahui; 'pop' hanya penentu warna sampul cadangan
+      const tags = genre ? GENRE_TAGS[genre] : undefined;
+      return parseJamendoTracks(await getJson(buildTracksUrl(clientId, { search: query, tags, limit: 20 }), signal), { genre: genre ?? 'pop', policy });
     }
   };
 }

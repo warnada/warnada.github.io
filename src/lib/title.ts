@@ -1,4 +1,4 @@
-const TITLES: Record<string, string> = { '/pustaka': 'Pustaka', '/unduhan': 'Unduhan', '/cari': 'Cari', '/jelajah': 'Jelajah' };
+const TITLES: Record<string, string> = { '/pustaka': 'Pustaka', '/unduhan': 'Unduhan', '/cari': 'Cari' };
 const HOME_TITLE = 'Warnada · Musik dengan lirik tersinkron';
 
 export interface NowPlaying { title: string; artist: string; playing: boolean }

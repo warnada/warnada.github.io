@@ -7,7 +7,6 @@ describe('pageTitle', () => {
     expect(pageTitle('/pustaka', null)).toBe('Pustaka · Warnada');
     expect(pageTitle('/unduhan', null)).toBe('Unduhan · Warnada');
     expect(pageTitle('/cari', null)).toBe('Cari · Warnada');
-    expect(pageTitle('/jelajah', null)).toBe('Jelajah · Warnada');
     expect(pageTitle('/ngawur', null)).toBe('Halaman tidak ditemukan · Warnada');
   });
   it('saat memutar, judul tab menampilkan lagu', () => {

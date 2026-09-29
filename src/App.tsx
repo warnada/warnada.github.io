@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Link, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { useSettings } from '@/store/settings';
 import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
@@ -11,9 +11,17 @@ import { LyricPanel, MiniPlayer, PlayerBar } from '@/components/Player';
 import { Nav } from '@/components/parts';
 import { Icon } from '@/components/Icon';
 import { QueueSheet, ThemeSheet, Toast, useInstall } from '@/components/Overlays';
-import { Downloads, Explore, Home, Library, Search } from '@/pages/pages';
+import { Downloads, Home, Library, Search } from '@/pages/pages';
+import { readGenre } from '@/lib/search';
 
 const PlayerPage = lazy(() => import('@/pages/PlayerPage'));
+
+/** Jelajah digabung ke Cari. Tautan lama (/jelajah, /jelajah?g=jazz) tetap bekerja. */
+function JelajahRedirect() {
+  const [params] = useSearchParams();
+  const genre = readGenre(params.get('g'));
+  return <Navigate replace to={genre ? `/cari?genre=${genre}` : '/cari'} />;
+}
 
 function useApplyTheme() {
   const { genre, theme, followGenre } = useSettings();
@@ -78,7 +86,6 @@ function TopBar({ scrolled }: { scrolled: boolean }) {
       <Link to="/" className="topbar__brand"><img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />warnada</Link>
       {!online && <span className="overline" role="status"><Icon name="wifioff" width={16} height={16} style={{ verticalAlign: '-3px' }} /> Offline</span>}
       {canPrompt && <button type="button" className="wd-btn wd-btn--solid" onClick={install}><Icon name="install" />Pasang</button>}
-      <Link to="/cari" className="wd-btn wd-btn--icon" aria-label="Cari"><Icon name="search" /></Link>
       <button type="button" className="wd-btn wd-btn--icon" aria-label={theme === 'dark' ? 'Ganti ke tema terang' : 'Ganti ke tema gelap'} onClick={() => set({ theme: theme === 'dark' ? 'light' : 'dark' })}><Icon name={theme === 'dark' ? 'sun' : 'moon'} /></button>
       <button type="button" className="wd-btn wd-btn--icon" aria-label="Pilih suasana" onClick={() => useUi.setState({ themeSheet: true })}><Icon name="palette" /></button>
     </header>
@@ -100,7 +107,7 @@ function Shell() {
         <TopBar scrolled={scrolled} />
         <Routes>
           <Route index element={<Home />} />
-          <Route path="jelajah" element={<Explore />} />
+          <Route path="jelajah" element={<JelajahRedirect />} />
           <Route path="pustaka" element={<Library />} />
           <Route path="unduhan" element={<Downloads />} />
           <Route path="cari" element={<Search />} />

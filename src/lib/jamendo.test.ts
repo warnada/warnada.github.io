@@ -82,6 +82,15 @@ describe('GENRE_TAGS', () => it('mencakup semua genre aplikasi', () => {
   expect(Object.keys(GENRE_TAGS).sort()).toEqual(['akustik', 'dangdut', 'edm', 'jazz', 'klasik', 'lofi', 'pop', 'rock']);
 }));
 
+describe('buildTracksUrl: pencarian dalam genre', () => {
+  it('search dan tags bisa digabung', () => {
+    const u = new URL(buildTracksUrl('x', { search: 'malam', tags: 'jazz' }));
+    expect(u.searchParams.get('search')).toBe('malam');
+    expect(u.searchParams.get('tags')).toBe('jazz');
+    expect(u.searchParams.get('order')).toBe('relevance');
+  });
+});
+
 describe('parseLicensePolicy', () => {
   it('bawaan all (Warnada non-komersial); commercial hanya bila diminta eksplisit', () => {
     expect(parseLicensePolicy(undefined)).toBe('all');

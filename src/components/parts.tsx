@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import type { Genre, Track } from '@/lib/types';
 import { GENRES, GENRE_LABEL } from '@/lib/types';
 import { formatTime } from '@/lib/format';
+import { splitHighlight } from '@/lib/search';
 import { canPlay, playTrack, usePlayer } from '@/audio/engine';
 import { useLibrary } from '@/store/library';
 import { useOnline } from '@/audio/hooks';
@@ -34,7 +35,15 @@ export function FavoriteButton({ id, title, className = '' }: { id: string; titl
   );
 }
 
-export function SongRow({ track, queue, showAlbum }: { track: Track; queue: string[]; showAlbum?: boolean }) {
+const HIGHLIGHT_MIN = 2;
+
+/** Teks dengan bagian yang cocok dengan kata cari disorot (<mark>). */
+export function Highlight({ text, term }: { text: string; term?: string }) {
+  if (!term || term.trim().length < HIGHLIGHT_MIN) return <>{text}</>; // satu huruf disorot di mana-mana = berisik
+  return <>{splitHighlight(text, term).map((s, i) => (s.hit ? <mark key={i}>{s.text}</mark> : <Fragment key={i}>{s.text}</Fragment>))}</>;
+}
+
+export function SongRow({ track, queue, showAlbum, highlight }: { track: Track; queue: string[]; showAlbum?: boolean; highlight?: string }) {
   const downloaded = useLibrary((s) => s.downloaded.has(track.id));
   const current = usePlayer((s) => s.currentId === track.id);
   useOnline(); useSettings((s) => s.offlineMode); useLibrary((s) => s.downloaded); // re-render saat status berubah
@@ -44,8 +53,8 @@ export function SongRow({ track, queue, showAlbum }: { track: Track; queue: stri
       <button type="button" className="wd-row" disabled={!playable} aria-current={current} onClick={() => playTrack(track.id, queue)}>
         <Art genre={track.genre} src={track.artwork} className="wd-row__art" />
         <span className="wd-row__text">
-          <span className="wd-row__title">{track.title}</span>
-          <span className="wd-row__meta">{track.artist} · {!playable ? 'Belum diunduh' : showAlbum ? track.album : formatTime(track.duration)}</span>
+          <span className="wd-row__title"><Highlight text={track.title} term={highlight} /></span>
+          <span className="wd-row__meta"><Highlight text={track.artist} term={highlight} /> · {!playable ? 'Belum diunduh' : showAlbum ? track.album : formatTime(track.duration)}</span>
         </span>
         <span className="wd-row__end">{downloaded && <Icon name="check" aria-label="Tersedia offline" role="img" />}</span>
       </button>
@@ -68,7 +77,7 @@ export function GenreSwatches({ value, onPick }: { value: Genre; onPick: (g: Gen
 
 const NAV = [
   { to: '/', label: 'Beranda', icon: 'home' as const },
-  { to: '/jelajah', label: 'Jelajah', icon: 'compass' as const },
+  { to: '/cari', label: 'Cari', icon: 'search' as const },
   { to: '/pustaka', label: 'Pustaka', icon: 'library' as const },
   { to: '/unduhan', label: 'Unduhan', icon: 'download' as const }
 ];
