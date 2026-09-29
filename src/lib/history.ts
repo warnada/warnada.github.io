@@ -1,8 +1,10 @@
+import { normalizeTerm, RECENT_MAX } from './search';
+
 export const HISTORY_MAX = 20;
 export const FAVORITES_MAX = 500;
 
 export interface LastPlayed { id: string; position: number }
-export interface SessionData { history: string[]; favorites: string[]; last: LastPlayed | null }
+export interface SessionData { history: string[]; favorites: string[]; recentSearches: string[]; last: LastPlayed | null }
 
 /** Lagu terbaru di depan, tanpa duplikat, dibatasi HISTORY_MAX. Tidak mengubah array asli. */
 export function pushHistory(list: string[], id: string, max = HISTORY_MAX): string[] {
@@ -21,6 +23,16 @@ const cleanIds = (raw: unknown, max: number): string[] => {
     .slice(0, max);
 };
 
+const cleanRecent = (raw: unknown): string[] => {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const x of Array.isArray(raw) ? raw : []) {
+    const t = typeof x === 'string' ? normalizeTerm(x) : null;
+    if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); out.push(t); }
+  }
+  return out.slice(0, RECENT_MAX);
+};
+
 /** Data dari localStorage tidak tepercaya: ambil hanya yang bentuknya benar. */
 export function sanitizeSession(raw: unknown): SessionData {
   const r = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
@@ -28,5 +40,5 @@ export function sanitizeSession(raw: unknown): SessionData {
   const last = l && typeof l.id === 'string' && l.id && typeof l.position === 'number'
     ? { id: l.id, position: Number.isFinite(l.position) ? Math.max(0, l.position) : 0 }
     : null;
-  return { history: cleanIds(r.history, HISTORY_MAX), favorites: cleanIds(r.favorites, FAVORITES_MAX), last };
+  return { history: cleanIds(r.history, HISTORY_MAX), favorites: cleanIds(r.favorites, FAVORITES_MAX), recentSearches: cleanRecent(r.recentSearches), last };
 }

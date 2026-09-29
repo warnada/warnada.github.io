@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { GENRES, GENRE_LABEL, type Genre, type Track } from '@/lib/types';
 import { formatSize } from '@/lib/format';
@@ -8,10 +8,10 @@ import { canPlay, playTrack, toggle, usePlayer } from '@/audio/engine';
 import { useOnline } from '@/audio/hooks';
 import { jamendo, useLibrary } from '@/store/library';
 import { useSession } from '@/store/session';
-import { matchTrack } from '@/lib/search';
+import { matchTrack, readGenre } from '@/lib/search';
 import { greetingFor, quickPicks } from '@/lib/home';
 import { useSettings } from '@/store/settings';
-import { Art, Chip, SongRow, Switch } from '@/components/parts';
+import { Art, Chip, Highlight, SongRow, Switch } from '@/components/parts';
 import { Icon } from '@/components/Icon';
 import { InstallBanner } from '@/components/Overlays';
 
@@ -19,6 +19,7 @@ const CAROUSEL_MAX = 12;
 const HOME_LIST_MAX = 12;
 const PICKS_MAX = 6;
 const SEARCH_DEBOUNCE_MS = 400;
+const URL_SYNC_MS = 500;
 const ids = (t: Track[]) => t.map((x) => x.id);
 
 function Empty({ title, children }: { title: string; children?: React.ReactNode }) {
@@ -108,9 +109,9 @@ export function Home() {
       )}
       {loadingRemote && <p className="caption" role="status">Memuat lagu dari Jamendo…</p>}
       {!!tracks.length && <>
-        <section className="section"><div className="section__head"><h2>Suasana</h2><Link to="/jelajah" className="section__more">Jelajahi</Link></div>
+        <section className="section"><div className="section__head"><h2>Suasana</h2><Link to="/cari" className="section__more">Jelajahi</Link></div>
           <div className="hscroll hscroll--tiles">{GENRES.map((g) => (
-            <Link key={g} to={`/jelajah?g=${g}`} className="tile tile--sm" data-genre={g}><span>{GENRE_LABEL[g]}</span></Link>))}</div></section>
+            <Link key={g} to={`/cari?genre=${g}`} className="tile tile--sm" data-genre={g}><span>{GENRE_LABEL[g]}</span></Link>))}</div></section>
         <Shelf title={recent.length ? 'Lanjutkan mendengarkan' : 'Populer'} tracks={shelf} all={tracks} />
         {!!liked.length && <Shelf title="Disukai" tracks={liked} all={tracks} more={{ to: '/pustaka', label: 'Lihat semua' }} />}
         <section className="section"><div className="section__head"><h2>Semua lagu</h2>{tracks.length > HOME_LIST_MAX && <Link to="/pustaka" className="section__more">Lihat semua ({tracks.length})</Link>}</div>
@@ -138,28 +139,6 @@ function Shelf({ title, tracks, all, more }: { title: string; tracks: Track[]; a
           <Art genre={t.genre} src={t.artwork} /><span className="card__title">{t.title}</span><span className="caption">{t.artist}</span>
         </button>))}</div>
     </section>
-  );
-}
-
-export function Explore() {
-  const { tracks, status } = useTracks();
-  const [params] = useSearchParams();
-  const fromUrl = GENRES.find((g) => g === params.get('g')) ?? null;
-  const [genre, setGenre] = useState<Genre | null>(fromUrl);
-  const list = useMemo(() => (genre ? tracks.filter((t) => t.genre === genre) : []), [tracks, genre]);
-  return (
-    <div className="page">
-      <h1>Jelajah</h1>
-      <p className="muted">Pilih suasana, dan seluruh warna aplikasi ikut berubah.</p>
-      <Loading status={status} />
-      <div className="genre-grid">{GENRES.map((g) => {
-        const n = tracks.filter((t) => t.genre === g).length;
-        return <button key={g} type="button" className="tile" data-genre={g} aria-pressed={genre === g} onClick={() => { setGenre(g); useSettings.getState().set({ genre: g, followGenre: false }); }}>
-          <span>{GENRE_LABEL[g]}<small>{n} lagu</small></span></button>;
-      })}</div>
-      {genre && <section className="section"><h2>{GENRE_LABEL[genre]}</h2>
-        {list.length ? <div className="list">{list.map((t) => <SongRow key={t.id} track={t} queue={ids(list)} />)}</div> : <Empty title="Belum ada lagu">Genre ini belum punya lagu.</Empty>}</section>}
-    </div>
   );
 }
 
@@ -226,53 +205,142 @@ export function Downloads() {
   );
 }
 
+/**
+ * Cari + Jelajah dalam satu halaman. Keadaan (kata + genre) disimpan di URL:
+ * /cari?q=hujan&genre=jazz, sehingga tombol Back dan tautan dari Beranda bekerja.
+ */
 export function Search() {
   const { tracks, status } = useTracks();
-  const [q, setQ] = useState('');
-  const [found, setFound] = useState<{ term: string; ids: Set<string> }>({ term: '', ids: new Set() });
+  const [params, setParams] = useSearchParams();
+  const genre = readGenre(params.get('genre'));
+  const [q, setQ] = useState(params.get('q') ?? '');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const recent = useSession((s) => s.recentSearches);
+  const { addRecentSearch, removeRecentSearch, clearRecentSearches } = useSession.getState();
+  const addTracks = useLibrary((s) => s.addTracks);
+  const term = q.trim().toLowerCase();
+  const key = `${term}|${genre ?? ''}`;
+
+  const setGenre = (g: Genre | null) => {
+    const next = new URLSearchParams(params);
+    if (g) next.set('genre', g); else next.delete('genre');
+    setParams(next, { replace: true });
+  };
+  useEffect(() => { // tulis kata ke URL setelah jeda (Safari membatasi jumlah replaceState per detik)
+    const timer = window.setTimeout(() => {
+      const next = new URLSearchParams(window.location.search);
+      if (q.trim()) next.set('q', q.trim()); else next.delete('q');
+      if (next.toString() !== window.location.search.replace(/^\?/, '')) setParams(next, { replace: true });
+    }, URL_SYNC_MS);
+    return () => clearTimeout(timer);
+  }, [q, setParams]);
+
   const [lyr, setLyr] = useState<Record<string, string[]>>({});
   useEffect(() => { // muat lirik sekali untuk pencarian berbasis lirik
     if (!tracks.length) return;
     void Promise.all(tracks.map((t) => loadLyrics(t).then((l) => [t.id, l.map((x) => x.text)] as const).catch(() => [t.id, []] as const)))
       .then((e) => setLyr(Object.fromEntries(e)));
   }, [tracks]);
-  const term = q.trim().toLowerCase();
+
   const [remote, setRemote] = useState<'idle' | 'loading' | 'error'>('idle');
-  const addTracks = useLibrary((s) => s.addTracks);
+  const [found, setFound] = useState<{ key: string; ids: Set<string> }>({ key: '', ids: new Set() });
   useEffect(() => { // pencarian katalog Jamendo (debounce + batal saat mengetik lagi)
     const source = jamendo;
     if (!source || term.length < 2) return;
     const ctl = new AbortController();
     const timer = window.setTimeout(() => {
       setRemote('loading');
-      source.search(q.trim(), ctl.signal)
-        .then((list) => { addTracks(list); setRemote('idle'); setFound({ term, ids: new Set(list.map((t) => t.id)) }); })
+      source.search(q.trim(), ctl.signal, genre ?? undefined)
+        .then((list) => { addTracks(list); setRemote('idle'); setFound({ key, ids: new Set(list.map((t) => t.id)) }); })
         .catch((e) => { if (!ctl.signal.aborted) { setRemote('error'); console.debug(e); } });
     }, SEARCH_DEBOUNCE_MS);
     return () => { clearTimeout(timer); ctl.abort(); };
-  }, [term, q, addTracks]);
-  const results = useMemo(() => !term ? [] : tracks.flatMap((t) => {
+  }, [term, q, genre, key, addTracks]);
+
+  const inGenre = useMemo(() => (genre ? tracks.filter((t) => t.genre === genre) : tracks), [tracks, genre]);
+  const results = useMemo(() => !term ? [] : inGenre.flatMap((t) => {
     const m = matchTrack(t, term, lyr[t.id] ?? []);
     if (m) return [{ t, line: m.kind === 'lyric' ? m.line : undefined }];
-    return t.source === 'jamendo' && found.term === term && found.ids.has(t.id) ? [{ t, line: undefined }] : [];
-  }), [term, tracks, lyr, found]);
+    return t.source === 'jamendo' && found.key === key && found.ids.has(t.id) ? [{ t, line: undefined }] : [];
+  }), [term, inGenre, lyr, found, key]);
+
+  const submit = (e: React.FormEvent) => { e.preventDefault(); addRecentSearch(q); inputRef.current?.blur(); };
+  const onKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Escape') { if (q) setQ(''); else inputRef.current?.blur(); } };
+  const pickRecent = (t: string) => { setQ(t); inputRef.current?.focus(); };
+  const counts = useMemo(() => Object.fromEntries(GENRES.map((g) => [g, tracks.filter((t) => t.genre === g).length])) as Record<Genre, number>, [tracks]);
+  const desktop = typeof matchMedia !== 'undefined' && matchMedia('(pointer:fine)').matches;
+
   return (
-    <div className="page">
-      <h1>Cari</h1>
-      <label className="wd-search"><Icon name="search" width={20} height={20} />
-        <input type="search" autoFocus aria-label="Cari lagu, artis, atau lirik" placeholder="Lagu, artis, atau potongan lirik" value={q} onChange={(e) => setQ(e.target.value)} />
-        {q && <button type="button" className="icon-btn search-clear" aria-label="Hapus pencarian" onClick={() => setQ('')}><Icon name="close" width={18} height={18} /></button>}</label>
+    <div className="page search">
+      <h1 className="sr-only">Cari</h1>
+      <div className="searchhead">
+        <form role="search" onSubmit={submit}>
+          <label className="wd-search"><Icon name="search" width={20} height={20} />
+            <input ref={inputRef} type="search" enterKeyHint="search" autoComplete="off" autoFocus={desktop} aria-label="Cari lagu, artis, atau lirik" placeholder="Lagu, artis, atau potongan lirik" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKeyDown} />
+            {q && <button type="button" className="icon-btn search-clear" aria-label="Hapus pencarian" onClick={() => { setQ(''); inputRef.current?.focus(); }}><Icon name="close" width={18} height={18} /></button>}</label>
+        </form>
+        <div className="chips" role="group" aria-label="Filter genre">
+          <Chip active={!genre} onClick={() => setGenre(null)}>Semua</Chip>
+          {GENRES.map((g) => <Chip key={g} active={genre === g} onClick={() => setGenre(genre === g ? null : g)}>{GENRE_LABEL[g]}</Chip>)}
+        </div>
+      </div>
+      <OfflineNotice />
       <Loading status={status} />
-      {!term && status === 'ready' && <>
-        <Empty title="Ingat liriknya, lupa judulnya?">Ketik potongan liriknya, nanti kami carikan.</Empty>
-        <div className="chips chips--center" role="group" aria-label="Coba cari genre">{GENRES.map((g) => <Chip key={g} active={false} onClick={() => setQ(GENRE_LABEL[g])}>{GENRE_LABEL[g]}</Chip>)}</div>
-      </>}
-      {!!term && !!results.length && <p className="caption" role="status">{results.length} hasil</p>}
-      {remote === 'loading' && <p className="caption" role="status">Mencari di Jamendo…</p>}
-      {remote === 'error' && <p className="caption" role="status">Pencarian Jamendo gagal. Hasil lokal tetap ditampilkan.</p>}
-      {!!term && !results.length && remote !== 'loading' && <Empty title="Tidak ketemu">Tidak ada hasil untuk “{q}”.</Empty>}
-      <div className="list">{results.map(({ t, line }) => (
-        <div key={t.id}><SongRow track={t} queue={ids(results.map((r) => r.t))} />{line && <p className="snippet" style={{ padding: '0 12px 8px 72px' }}>“{line}”</p>}</div>))}</div>
+
+      {status === 'ready' && !term && !genre && (
+        <>
+          {!!recent.length && (
+            <section className="section" aria-labelledby="recent-h">
+              <div className="section__head"><h2 id="recent-h">Pencarian terakhir</h2><button type="button" className="section__more" onClick={clearRecentSearches}>Hapus semua</button></div>
+              <ul className="recent">{recent.map((t) => (
+                <li key={t}><button type="button" className="recent__term" onClick={() => pickRecent(t)}><Icon name="search" width={16} height={16} />{t}</button>
+                  <button type="button" className="recent__x" aria-label={`Hapus “${t}” dari pencarian terakhir`} onClick={() => removeRecentSearch(t)}><Icon name="close" width={14} height={14} /></button></li>))}</ul>
+            </section>
+          )}
+          <section className="section" aria-labelledby="genre-h">
+            <h2 id="genre-h">Jelajahi genre</h2>
+            <div className="genre-grid">{GENRES.map((g) => (
+              <button key={g} type="button" className="tile" data-genre={g} onClick={() => setGenre(g)}><span>{GENRE_LABEL[g]}<small>{counts[g]} lagu</small></span></button>))}</div>
+          </section>
+          <p className="search__hint"><Icon name="mic" width={18} height={18} />Ingat liriknya, lupa judulnya? Ketik potongan liriknya di kolom atas.</p>
+        </>
+      )}
+
+      {status === 'ready' && !term && genre && (
+        <section className="section" aria-labelledby="browse-h">
+          <div className="section__head">
+            <h2 id="browse-h">{GENRE_LABEL[genre]} · {inGenre.length} lagu</h2>
+            {!!inGenre.length && <button type="button" className="wd-btn wd-btn--accent search__playall" onClick={() => playTrack(inGenre[0].id, ids(inGenre))}><Icon name="play" />Putar semua</button>}
+          </div>
+          {inGenre.length ? <div className="list list--grid">{inGenre.map((t) => <SongRow key={t.id} track={t} queue={ids(inGenre)} />)}</div>
+            : <Empty title="Belum ada lagu">Genre ini belum punya lagu.</Empty>}
+        </section>
+      )}
+
+      {status === 'ready' && !!term && (
+        <section className="section" aria-label="Hasil pencarian">
+          <p className="caption" role="status" aria-live="polite">
+            {remote === 'loading' && !results.length ? 'Mencari…' : `${results.length} hasil untuk “${q.trim()}”${genre ? ` di ${GENRE_LABEL[genre]}` : ''}`}
+            {remote === 'loading' && !!results.length && ' · mencari di Jamendo…'}
+            {remote === 'error' && ' · pencarian Jamendo gagal, hasil lokal tetap ditampilkan'}
+          </p>
+          {!!results.length && (
+            <div className="list list--grid" onClickCapture={() => addRecentSearch(q)}>{results.map(({ t, line }) => (
+              <div key={t.id}><SongRow track={t} queue={ids(results.map((r) => r.t))} highlight={q} />
+                {line && <p className="snippet"><Icon name="mic" width={14} height={14} />“<Highlight text={line} term={q} />”</p>}</div>))}</div>
+          )}
+          {!results.length && remote !== 'loading' && (
+            <div className="empty">
+              <h2>Tidak ketemu</h2>
+              <p>Tidak ada hasil untuk “{q.trim()}”{genre ? ` di ${GENRE_LABEL[genre]}` : ''}. Coba kata lain atau ejaan yang lebih pendek.</p>
+              <div className="btn-row">
+                {genre && <button type="button" className="wd-btn wd-btn--ghost" onClick={() => setGenre(null)}>Cari di semua genre</button>}
+                <button type="button" className="wd-btn wd-btn--ghost" onClick={() => setQ('')}>Hapus pencarian</button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

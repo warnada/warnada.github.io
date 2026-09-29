@@ -21,11 +21,11 @@ describe('pushHistory', () => {
 
 describe('sanitizeSession', () => {
   it('menerima data valid', () => {
-    expect(sanitizeSession({ history: ['a', 'b'], last: { id: 'a', position: 12.5 } })).toEqual({ history: ['a', 'b'], favorites: [], last: { id: 'a', position: 12.5 } });
+    expect(sanitizeSession({ history: ['a', 'b'], last: { id: 'a', position: 12.5 } })).toEqual({ history: ['a', 'b'], favorites: [], recentSearches: [], last: { id: 'a', position: 12.5 } });
   });
   it('membuang data rusak dari localStorage', () => {
-    expect(sanitizeSession(null)).toEqual({ history: [], favorites: [], last: null });
-    expect(sanitizeSession({ history: ['a', 5, '', 'a', {}], last: { id: 7, position: 'x' } })).toEqual({ history: ['a'], favorites: [], last: null });
+    expect(sanitizeSession(null)).toEqual({ history: [], favorites: [], recentSearches: [], last: null });
+    expect(sanitizeSession({ history: ['a', 5, '', 'a', {}], last: { id: 7, position: 'x' } })).toEqual({ history: ['a'], favorites: [], recentSearches: [], last: null });
     expect(sanitizeSession({ history: [], last: { id: 'a', position: -3 } }).last).toEqual({ id: 'a', position: 0 });
     expect(sanitizeSession({ history: [], last: { id: 'a', position: Infinity } }).last).toEqual({ id: 'a', position: 0 });
   });
@@ -44,5 +44,11 @@ describe('toggleId (favorit)', () => {
   });
   it('sanitizeSession membersihkan favorit', () => {
     expect(sanitizeSession({ favorites: ['x', 'x', 3, 'y'] }).favorites).toEqual(['x', 'y']);
+  });
+});
+
+describe('sanitizeSession: pencarian terakhir', () => {
+  it('membersihkan dan membatasi', () => {
+    expect(sanitizeSession({ recentSearches: ['hujan', 'hujan', 3, '', 'x'.repeat(80), 'jazz'] }).recentSearches).toEqual(['hujan', 'jazz']);
   });
 });
