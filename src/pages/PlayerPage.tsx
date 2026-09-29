@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { currentTrack, usePlayer } from '@/audio/engine';
 import { useLibrary } from '@/store/library';
@@ -6,6 +6,8 @@ import { Art } from '@/components/parts';
 import { Icon } from '@/components/Icon';
 import { Lyrics, Progress, Transport } from '@/components/Player';
 import { GENRE_LABEL } from '@/lib/types';
+import { canDownload } from '@/lib/offline';
+import { useOnline } from '@/audio/hooks';
 
 export default function PlayerPage() {
   const navigate = useNavigate();
@@ -15,7 +17,14 @@ export default function PlayerPage() {
   const track = id ? currentTrack() : undefined;
   const [lyricsView, setLyricsView] = useState(false);
   const downloaded = useLibrary((s) => (id ? s.downloaded.has(id) : false));
-  const back = () => (history.length > 1 ? navigate(-1) : navigate('/'));
+  const online = useOnline();
+  const busy = useLibrary((s) => (id ? s.busy.has(id) : false));
+  const back = useCallback(() => { if (history.length > 1) navigate(-1); else navigate('/'); }, [navigate]);
+  useEffect(() => { // Esc menutup pemutar
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') back(); };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, [back]);
 
   if (!track) return (
     <div className="full wd-stage" data-genre="lofi"><div className="full__top"><button className="icon-btn" aria-label="Tutup" onClick={back}><Icon name="chevdown" /></button></div>
@@ -26,7 +35,12 @@ export default function PlayerPage() {
       <div className="full__top">
         <button type="button" className="icon-btn" aria-label="Tutup pemutar" onClick={back}><Icon name="chevdown" /></button>
         <span className="overline">{GENRE_LABEL[track.genre]}{downloaded ? ' · Offline' : ''}</span>
-        <button type="button" className="icon-btn" aria-label={lyricsView ? 'Tampilkan sampul' : 'Tampilkan lirik penuh'} aria-pressed={lyricsView} style={lyricsView ? { color: 'var(--accent)' } : undefined} onClick={() => setLyricsView((v) => !v)}><Icon name="mic" /></button>
+        <div className="full__actions">
+          {downloaded
+            ? <span className="icon-btn" role="img" aria-label="Tersedia offline" style={{ color: 'var(--accent)' }}><Icon name="check" /></span>
+            : <button type="button" className="icon-btn" disabled={busy || !online || !canDownload(track)} aria-label={canDownload(track) ? `Unduh ${track.title} untuk offline` : 'Lagu ini tidak boleh diunduh'} onClick={() => void useLibrary.getState().download(track)}>{busy ? <span className="ring" /> : <Icon name="download" />}</button>}
+          <button type="button" className="icon-btn" aria-label={lyricsView ? 'Tampilkan sampul' : 'Tampilkan lirik penuh'} aria-pressed={lyricsView} style={lyricsView ? { color: 'var(--accent)' } : undefined} onClick={() => setLyricsView((v) => !v)}><Icon name="mic" /></button>
+        </div>
       </div>
       <div className="full__body">
         <div className="full__head">

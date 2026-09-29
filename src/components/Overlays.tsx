@@ -39,6 +39,7 @@ export function ThemeSheet() {
           <div className="setting__text"><strong id="fg">Ikuti genre lagu</strong><span className="caption">Warna aplikasi berganti mengikuti lagu yang diputar.</span></div>
           <Switch on={s.followGenre} onChange={(followGenre) => s.set({ followGenre })} labelId="fg" />
         </div>
+        <p className="caption kbd-hint">Pintasan: Spasi putar/jeda · ←/→ ±5 detik · N/P lagu berikutnya/sebelumnya · Esc tutup pemutar</p>
         <button type="button" className="wd-btn wd-btn--ghost" onClick={close}>Selesai</button>
       </div>
     </div>

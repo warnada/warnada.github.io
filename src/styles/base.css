@@ -266,3 +266,18 @@ h1,h2{text-wrap:balance}
 @media (max-width:600px){.shell__nav{background:var(--glass-pop)}}
 /* Tanpa filter blur pada mesh, gradien terlihat lebih tegas; turunkan sedikit supaya tetap tenang */
 .wd-stage::before{opacity:calc(var(--mesh-opacity) * .78)}
+
+/* =====================  UX  ===================== */
+.skip{position:fixed;left:12px;top:-60px;z-index:100;padding:10px 16px;border-radius:var(--radius-pill);background:var(--solid);color:var(--solid-ink);font-weight:700;text-decoration:none;transition:top var(--t-fast)}
+.skip:focus{top:calc(env(safe-area-inset-top) + 8px)}
+#konten:focus{outline:none}
+.wd-chip{height:44px}
+.chips--center{justify-content:center;flex-wrap:wrap;overflow:visible;margin:0;padding:0}
+.search-clear{width:36px;height:36px;margin-right:-8px}
+.search-clear:hover{background:var(--glass-1)}
+.full__actions{display:flex;align-items:center;gap:0}
+.icon-btn:disabled{opacity:.4;cursor:not-allowed}
+.kbd-hint{display:none}
+@media (hover:hover) and (min-width:601px){.kbd-hint{display:block}}
+.banner .wd-btn{flex-shrink:0}
+a.wd-btn{text-decoration:none}

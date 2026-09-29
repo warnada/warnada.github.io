@@ -3,7 +3,9 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import { useSettings } from '@/store/settings';
 import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
-import { currentTrack, usePlayer } from '@/audio/engine';
+import { currentTrack, next, prev, restoreLast, seekBy, toggle, usePlayer } from '@/audio/engine';
+import { keyInfo, SEEK_STEP_SECONDS, shortcutFor } from '@/lib/shortcuts';
+import { pageTitle } from '@/lib/title';
 import { useOnline } from '@/audio/hooks';
 import { LyricPanel, MiniPlayer, PlayerBar } from '@/components/Player';
 import { Nav } from '@/components/parts';
@@ -38,6 +40,35 @@ function useScrolled(sentinel: React.RefObject<HTMLElement | null>): boolean {
   return scrolled;
 }
 
+/** Pintasan keyboard global untuk pemutar (spasi, panah, N/P). */
+function usePlayerShortcuts() {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const action = shortcutFor(keyInfo(e));
+      if (!action || !usePlayer.getState().currentId) return;
+      e.preventDefault();
+      if (action === 'toggle') toggle();
+      else if (action === 'next') next();
+      else if (action === 'prev') prev();
+      else seekBy(action === 'seek-forward' ? SEEK_STEP_SECONDS : -SEEK_STEP_SECONDS);
+    };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, []);
+}
+
+/** Judul tab mengikuti halaman, dan lagu yang sedang diputar. */
+function useDocumentTitle() {
+  const { pathname } = useLocation();
+  const id = usePlayer((s) => s.currentId);
+  const playing = usePlayer((s) => s.playing);
+  useLibrary((s) => s.tracks);
+  const track = id ? currentTrack() : undefined;
+  useEffect(() => {
+    document.title = pageTitle(pathname, track ? { title: track.title, artist: track.artist, playing } : null);
+  }, [pathname, track, playing]);
+}
+
 function TopBar({ scrolled }: { scrolled: boolean }) {
   const { theme, set } = useSettings();
   const { canPrompt, install } = useInstall();
@@ -62,8 +93,9 @@ function Shell() {
   useEffect(() => { document.querySelector('.shell__main')?.scrollTo(0, 0); }, [pathname]);
   return (
     <div className="shell wd-stage">
+      <a href="#konten" className="skip">Lewati ke konten</a>
       <Nav />
-      <main className={`shell__main ${hasTrack ? '' : 'shell__main--nomini'}`}>
+      <main id="konten" tabIndex={-1} className={`shell__main ${hasTrack ? '' : 'shell__main--nomini'}`}>
         <div ref={sentinel} className="topbar-sentinel" aria-hidden="true" />
         <TopBar scrolled={scrolled} />
         <Routes>
@@ -84,8 +116,12 @@ function Shell() {
 
 export default function App() {
   useApplyTheme();
+  usePlayerShortcuts();
+  useDocumentTitle();
   const load = useLibrary((s) => s.load);
+  const tracks = useLibrary((s) => s.tracks);
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => { restoreLast(); }, [tracks]); // lanjutkan lagu terakhir begitu katalog tersedia
   return (
     <>
       <Routes>

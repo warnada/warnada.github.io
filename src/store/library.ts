@@ -19,6 +19,7 @@ interface LibraryState {
   downloaded: Set<string>;
   busy: Set<string>;
   load: () => Promise<void>;
+  retry: () => Promise<void>;
   addTracks: (incoming: Track[]) => void;
   download: (t: Track) => Promise<void>;
   remove: (t: Track) => Promise<void>;
@@ -28,6 +29,7 @@ const downloadedIds = (tracks: Track[], keys: Set<string>) => new Set(tracks.fil
 
 export const useLibrary = create<LibraryState>((set, get) => ({
   tracks: [], status: 'idle', loadingRemote: false, cachedKeys: new Set(), downloaded: new Set(), busy: new Set(),
+  async retry() { set({ status: 'idle' }); await get().load(); },
   addTracks(incoming) {
     set((s) => {
       const tracks = mergeTracks(s.tracks, incoming);
