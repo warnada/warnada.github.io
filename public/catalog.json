@@ -1,0 +1,93 @@
+{
+ "version": 1,
+ "tracks": [
+  {
+   "id": "rinai-senja",
+   "title": "Rinai Senja",
+   "artist": "Sore Pelan",
+   "album": "Hujan di Jendela",
+   "genre": "lofi",
+   "duration": 58,
+   "audio": "audio/rinai-senja.mp3",
+   "lyrics": "lyrics/rinai-senja.lrc",
+   "size": 467278
+  },
+  {
+   "id": "gula-gula",
+   "title": "Gula-Gula Pagi",
+   "artist": "Nona Kembang",
+   "album": "Manis Sekali",
+   "genre": "pop",
+   "duration": 40,
+   "audio": "audio/gula-gula.mp3",
+   "lyrics": "lyrics/gula-gula.lrc",
+   "size": 320992
+  },
+  {
+   "id": "baja-menyala",
+   "title": "Baja Menyala",
+   "artist": "Gerbang Api",
+   "album": "Jalan Raya Malam",
+   "genre": "rock",
+   "duration": 34,
+   "audio": "audio/baja-menyala.mp3",
+   "lyrics": "lyrics/baja-menyala.lrc",
+   "size": 274390
+  },
+  {
+   "id": "kopi-tengah-malam",
+   "title": "Kopi Tengah Malam",
+   "artist": "Trio Beledu",
+   "album": "Kelab Kecil",
+   "genre": "jazz",
+   "duration": 48,
+   "audio": "audio/kopi-tengah-malam.mp3",
+   "lyrics": "lyrics/kopi-tengah-malam.lrc",
+   "size": 388075
+  },
+  {
+   "id": "lampu-lantai",
+   "title": "Lampu Lantai",
+   "artist": "Denyut Kota",
+   "album": "Pukul Dua",
+   "genre": "edm",
+   "duration": 35,
+   "audio": "audio/lampu-lantai.mp3",
+   "lyrics": "lyrics/lampu-lantai.lrc",
+   "size": 282540
+  },
+  {
+   "id": "goyang-syahdu",
+   "title": "Goyang Syahdu",
+   "artist": "Orkes Senandung",
+   "album": "Malam Minggu",
+   "genre": "dangdut",
+   "duration": 43,
+   "audio": "audio/goyang-syahdu.mp3",
+   "lyrics": "lyrics/goyang-syahdu.lrc",
+   "size": 344816
+  },
+  {
+   "id": "teras-belakang",
+   "title": "Teras Belakang",
+   "artist": "Petik Damai",
+   "album": "Sore di Desa",
+   "genre": "akustik",
+   "duration": 53,
+   "audio": "audio/teras-belakang.mp3",
+   "lyrics": "lyrics/teras-belakang.lrc",
+   "size": 424019
+  },
+  {
+   "id": "fajar-di-atas-awan",
+   "title": "Fajar di Atas Awan",
+   "artist": "Kuartet Tirai",
+   "album": "Suite Pagi",
+   "genre": "klasik",
+   "duration": 67,
+   "audio": "audio/fajar-di-atas-awan.mp3",
+   "lyrics": "lyrics/fajar-di-atas-awan.lrc",
+   "size": 536241
+  }
+ ]
+}

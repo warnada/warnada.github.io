@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id" data-genre="lofi" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Warnada · Musik dengan lirik tersinkron</title>
+    <meta name="description" content="Warnada memutar musik dengan lirik tersinkron. Pasang di HP dan dengarkan offline." />
+    <meta name="theme-color" content="#0D0A18" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Warnada" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      // Terapkan tema sebelum render pertama supaya tidak berkedip.
+      try {
+        var s = JSON.parse(localStorage.getItem('warnada:settings') || '{}').state || {};
+        var d = document.documentElement;
+        if (s.theme) d.dataset.theme = s.theme; else if (matchMedia('(prefers-color-scheme: light)').matches) d.dataset.theme = 'light';
+        if (s.genre) d.dataset.genre = s.genre;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Warnada membutuhkan JavaScript.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
