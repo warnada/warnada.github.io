@@ -1,5 +1,6 @@
 import type { Track } from './types';
 import { parseLrc, type LyricLine } from './lrc';
+import { parseCatalog } from './validate';
 
 /**
  * Sumber katalog. Saat ini berkas statis; untuk backend nanti cukup ganti
@@ -16,7 +17,7 @@ export const staticCatalog: CatalogSource = {
   async tracks() {
     const res = await fetch(url('catalog.json'));
     if (!res.ok) throw new Error(`catalog ${res.status}`);
-    return (await res.json()).tracks as Track[];
+    return parseCatalog(await res.json());
   },
   async lyrics(track) {
     const res = await fetch(url(track.lyrics));

@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import type { Track } from '@/lib/types';
 import { assetUrl } from '@/lib/catalog';
+import { pickNext, type Repeat } from '@/lib/queue';
 import { useLibrary } from '@/store/library';
 import { useSettings } from '@/store/settings';
 import { toast } from '@/store/ui';
 
-export type Repeat = 'off' | 'all' | 'one';
 
 interface PlayerState {
   currentId: string | null;
@@ -52,21 +52,11 @@ export const seek = (sec: number) => { if (Number.isFinite(sec)) audio.currentTi
 
 function step(dir: 1 | -1, auto = false) {
   const { queue, currentId, shuffle, repeat } = usePlayer.getState();
-  if (!currentId || !queue.length) return;
-  const playable = queue.filter((id) => { const t = trackById(id); return t && canPlay(t); });
-  if (!playable.length) return;
-  if (auto && repeat === 'one') { audio.currentTime = 0; void audio.play(); return; }
-  let next: string | undefined;
-  if (shuffle && playable.length > 1) {
-    const pool = playable.filter((id) => id !== currentId);
-    next = pool[Math.floor(Math.random() * pool.length)];
-  } else {
-    const i = playable.indexOf(currentId);
-    const n = (i + dir + playable.length) % playable.length;
-    if (auto && repeat === 'off' && dir === 1 && i === playable.length - 1) { audio.currentTime = 0; usePlayer.setState({ playing: false }); return; }
-    next = playable[n];
-  }
-  if (next) playTrack(next);
+  const isPlayable = (id: string) => { const t = trackById(id); return !!t && canPlay(t); };
+  const d = pickNext({ queue, currentId, shuffle, repeat, auto, isPlayable, random: Math.random }, dir);
+  if (d.type === 'play') playTrack(d.id);
+  else if (d.type === 'restart') { audio.currentTime = 0; void audio.play(); }
+  else if (auto) usePlayer.setState({ playing: false });
 }
 export const next = () => step(1);
 export const prev = () => { if (audio.currentTime > 3) audio.currentTime = 0; else step(-1); };

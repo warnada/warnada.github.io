@@ -13,15 +13,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <script>
-      // Terapkan tema sebelum render pertama supaya tidak berkedip.
-      try {
-        var s = JSON.parse(localStorage.getItem('warnada:settings') || '{}').state || {};
-        var d = document.documentElement;
-        if (s.theme) d.dataset.theme = s.theme; else if (matchMedia('(prefers-color-scheme: light)').matches) d.dataset.theme = 'light';
-        if (s.genre) d.dataset.genre = s.genre;
-      } catch (e) {}
-    </script>
+    <script src="/theme-boot.js"></script>
   </head>
   <body>
     <div id="root"></div>

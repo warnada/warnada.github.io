@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Genre, ThemeMode } from '@/lib/types';
+import { sanitizeSettings } from '@/lib/validate';
 
 interface SettingsState {
   genre: Genre;
@@ -19,6 +20,6 @@ export const useSettings = create<SettingsState>()(
       genre: 'lofi', theme: prefersLight ? 'light' : 'dark', followGenre: true, offlineMode: false, bannerDismissed: false,
       set: (patch) => set(patch)
     }),
-    { name: 'warnada:settings', version: 1, partialize: (s) => ({ genre: s.genre, theme: s.theme, followGenre: s.followGenre, offlineMode: s.offlineMode, bannerDismissed: s.bannerDismissed }) }
+    { name: 'warnada:settings', version: 1, merge: (saved, current) => ({ ...current, ...sanitizeSettings(saved, current) }), partialize: (s) => ({ genre: s.genre, theme: s.theme, followGenre: s.followGenre, offlineMode: s.offlineMode, bannerDismissed: s.bannerDismissed }) }
   )
 );
