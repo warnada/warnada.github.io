@@ -7,6 +7,7 @@ import { canPlay, playTrack, usePlayer } from '@/audio/engine';
 import { useLibrary } from '@/store/library';
 import { useOnline } from '@/audio/hooks';
 import { useSettings } from '@/store/settings';
+import { useSession } from '@/store/session';
 import { Icon } from './Icon';
 
 export const Art = ({ genre, src, className = '' }: { genre: Genre; src?: string; className?: string }) => (
@@ -23,20 +24,33 @@ export function Chip({ active, children, onClick }: { active: boolean; children:
   return <button type="button" className="wd-chip" aria-pressed={active} onClick={onClick}>{children}</button>;
 }
 
+export function FavoriteButton({ id, title, className = '' }: { id: string; title: string; className?: string }) {
+  const on = useSession((s) => s.favorites.includes(id));
+  const toggle = useSession((s) => s.toggleFavorite);
+  return (
+    <button type="button" className={`icon-btn fav ${on ? 'is-on' : ''} ${className}`} aria-pressed={on} aria-label={on ? `Hapus ${title} dari Disukai` : `Sukai ${title}`} onClick={() => toggle(id)}>
+      <Icon name={on ? 'heartfill' : 'heart'} />
+    </button>
+  );
+}
+
 export function SongRow({ track, queue, showAlbum }: { track: Track; queue: string[]; showAlbum?: boolean }) {
   const downloaded = useLibrary((s) => s.downloaded.has(track.id));
   const current = usePlayer((s) => s.currentId === track.id);
   useOnline(); useSettings((s) => s.offlineMode); useLibrary((s) => s.downloaded); // re-render saat status berubah
   const playable = canPlay(track);
   return (
-    <button type="button" className="wd-row" disabled={!playable} aria-current={current} onClick={() => playTrack(track.id, queue)}>
-      <Art genre={track.genre} src={track.artwork} className="wd-row__art" />
-      <span className="wd-row__text">
-        <span className="wd-row__title">{track.title}</span>
-        <span className="wd-row__meta">{track.artist} · {!playable ? 'Belum diunduh' : showAlbum ? track.album : formatTime(track.duration)}</span>
-      </span>
-      <span className="wd-row__end">{downloaded && <Icon name="check" aria-label="Tersedia offline" role="img" />}</span>
-    </button>
+    <div className="row-wrap">
+      <button type="button" className="wd-row" disabled={!playable} aria-current={current} onClick={() => playTrack(track.id, queue)}>
+        <Art genre={track.genre} src={track.artwork} className="wd-row__art" />
+        <span className="wd-row__text">
+          <span className="wd-row__title">{track.title}</span>
+          <span className="wd-row__meta">{track.artist} · {!playable ? 'Belum diunduh' : showAlbum ? track.album : formatTime(track.duration)}</span>
+        </span>
+        <span className="wd-row__end">{downloaded && <Icon name="check" aria-label="Tersedia offline" role="img" />}</span>
+      </button>
+      <FavoriteButton id={track.id} title={track.title} />
+    </div>
   );
 }
 

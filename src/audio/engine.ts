@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Track } from '@/lib/types';
 import { assetUrl, mediaUrl } from '@/lib/catalog';
-import { pickNext, type Repeat } from '@/lib/queue';
+import { pickNext, removeFromQueue, type Repeat } from '@/lib/queue';
 import { useLibrary } from '@/store/library';
 import { useSettings } from '@/store/settings';
 import { useSession } from '@/store/session';
@@ -62,6 +62,7 @@ function step(dir: 1 | -1, auto = false) {
 }
 export const next = () => step(1);
 export const prev = () => { if (audio.currentTime > 3) audio.currentTime = 0; else step(-1); };
+export const removeQueueItem = (id: string) => usePlayer.setState((s) => ({ queue: removeFromQueue(s.queue, s.currentId, id) }));
 export const toggleShuffle = () => usePlayer.setState((s) => ({ shuffle: !s.shuffle }));
 export const cycleRepeat = () => usePlayer.setState((s) => ({ repeat: s.repeat === 'off' ? 'all' : s.repeat === 'all' ? 'one' : 'off' }));
 

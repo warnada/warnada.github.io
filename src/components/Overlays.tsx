@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSettings } from '@/store/settings';
 import { dismissToast, useUi } from '@/store/ui';
 import { GenreSwatches, Switch } from './parts';
+import { QueueList } from './Player';
 import { Icon } from './Icon';
 
 export function Toast() {
@@ -73,6 +74,26 @@ export function InstallBanner() {
       <p>{canPrompt ? 'Pasang Warnada di HP' : 'Di Safari: ketuk Bagikan, lalu “Tambah ke Layar Utama”.'}</p>
       {canPrompt && <button type="button" className="wd-btn wd-btn--accent" onClick={install}>Pasang</button>}
       <button type="button" className="wd-btn" onClick={() => useSettings.getState().set({ bannerDismissed: true })}>Nanti saja</button>
+    </div>
+  );
+}
+
+export function QueueSheet() {
+  const open = useUi((s) => s.queueSheet);
+  useEffect(() => {
+    if (!open) return;
+    const k = (e: KeyboardEvent) => e.key === 'Escape' && useUi.setState({ queueSheet: false });
+    addEventListener('keydown', k); return () => removeEventListener('keydown', k);
+  }, [open]);
+  if (!open) return null;
+  const close = () => useUi.setState({ queueSheet: false });
+  return (
+    <div className="sheet-backdrop" onClick={close}>
+      <div className="sheet wd-glass wd-glass--pop" role="dialog" aria-modal="true" aria-labelledby="antrean-h" onClick={(e) => e.stopPropagation()}>
+        <h2 id="antrean-h">Antrean</h2>
+        <QueueList />
+        <button type="button" className="wd-btn wd-btn--ghost" onClick={close}>Tutup</button>
+      </div>
     </div>
   );
 }

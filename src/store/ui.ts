@@ -3,10 +3,12 @@ import { create } from 'zustand';
 interface UiState {
   toast: { id: number; text: string; action?: { label: string; run: () => void } } | null;
   themeSheet: boolean;
+  queueSheet: boolean;
   lyricsPanel: boolean;
+  panelTab: 'lyrics' | 'queue';
   setUi: (p: Partial<Omit<UiState, 'setUi'>>) => void;
 }
-export const useUi = create<UiState>((set) => ({ toast: null, themeSheet: false, lyricsPanel: true, setUi: (p) => set(p) }));
+export const useUi = create<UiState>((set) => ({ toast: null, themeSheet: false, queueSheet: false, lyricsPanel: true, panelTab: 'lyrics', setUi: (p) => set(p) }));
 
 let timer: number | undefined;
 export function toast(text: string, action?: { label: string; run: () => void }, ms = 4000) {
