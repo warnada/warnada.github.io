@@ -13,7 +13,7 @@ import { greetingFor, quickPicks } from '@/lib/home';
 import { useSettings } from '@/store/settings';
 import { Art, Chip, Highlight, SongRow, Switch } from '@/components/parts';
 import { Wada } from '@/components/Wada';
-import { SkyMini, TimedSky } from '@/components/Sky';
+import { PageSky, SkyMini, TimedSky } from '@/components/Sky';
 import { SKY, weatherFor } from '@/lib/sky';
 import { Icon } from '@/components/Icon';
 import { InstallBanner } from '@/components/Overlays';
@@ -95,30 +95,32 @@ export function Home() {
       )}
       {hero && (
         <section className="lhero" data-genre={hero.genre} aria-label="Langit hari ini">
-          <TimedSky className="lhero__sky" arc={false} weather={weatherFor(hero.genre)} vbH={320} baseFrac={0.8} trackId={hero.id} duration={hero.duration} fallbackT={progress / 100}>
+          <TimedSky className="lhero__sky" weather={weatherFor(hero.genre)} vbH={500} baseFrac={0.7} trackId={hero.id} duration={hero.duration} fallbackT={progress / 100}>
             <div className="lhero__text">
               <p className="hello__greet">{greetingFor(new Date().getHours())}</p>
               <h1>{SKY[weatherFor(hero.genre)].title}</h1>
               <p className="lhero__sub">Langit ini memutar {GENRE_LABEL[hero.genre]}</p>
             </div>
-            <Wada className="lhero__wada" size={72} mood={running ? 'sing' : 'happy'} bounce={running} />
+            <Wada className="lhero__wada" size={80} mood={running ? 'sing' : 'happy'} bounce={running} />
           </TimedSky>
-          <div className="lhero__now">
-            <button type="button" className="continue__play" aria-label={running ? 'Jeda' : resumed || isCurrent ? 'Lanjutkan' : 'Putar'} onClick={heroAction}><Icon name={running ? 'pause' : 'play'} /></button>
-            <Link to="/putar" className="continue__open" aria-label={`Buka pemutar: ${hero.title}`}>
-              <span className="continue__text">
-                <span className="overline">{resumed || isCurrent ? 'Terakhir diputar' : `Mix harian · ${tracks.length} lagu`}</span>
-                <span className="continue__title" style={{ display: 'block' }}>{hero.title}</span>
-                <span className="caption" style={{ display: 'block' }}>{hero.artist}</span>
-              </span>
-            </Link>
+          <div className="lhero__sheet">
+            <div className="lhero__now">
+              <button type="button" className="continue__play" aria-label={running ? 'Jeda' : resumed || isCurrent ? 'Lanjutkan' : 'Putar'} onClick={heroAction}><Icon name={running ? 'pause' : 'play'} /></button>
+              <Link to="/putar" className="continue__open" aria-label={`Buka pemutar: ${hero.title}`}>
+                <span className="continue__text">
+                  <span className="overline">{isCurrent ? 'Sedang mengudara' : resumed ? 'Terakhir diputar' : `Mix harian · ${tracks.length} lagu`}</span>
+                  <span className="continue__title" style={{ display: 'block' }}>{hero.title}</span>
+                  <span className="caption" style={{ display: 'block' }}>{hero.artist}</span>
+                </span>
+              </Link>
+            </div>
           </div>
         </section>
       )}
       {loadingRemote && <p className="caption" role="status">Memuat lagu dari Jamendo…</p>}
       {!!tracks.length && <>
         <section className="section" aria-labelledby="mood-h"><div className="section__head"><h2 id="mood-h">Suasana</h2><Link to="/cari" className="section__more">Jelajahi</Link></div>
-          <div className="chips">{GENRES.map((g) => <Link key={g} to={`/cari?genre=${g}`} className="wd-chip">{GENRE_LABEL[g]}</Link>)}</div></section>
+          <div className="chips">{GENRES.map((g) => <Link key={g} to={`/cari?genre=${g}`} className="wd-chip wd-chip--dot"><i style={{ background: SKY[weatherFor(g)].sun }} aria-hidden="true" />{GENRE_LABEL[g]}</Link>)}</div></section>
         <Shelf title="Untukmu" tracks={shelf} all={tracks} />
         {!!recent.length && <section className="section"><div className="section__head"><h2>Baru diputar</h2><Link to="/pustaka" className="section__more">Pustaka</Link></div>
           <div className="list list--grid">{recent.map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>}
@@ -149,7 +151,7 @@ export function Library() {
   const list = tracks.filter((t) => f === 'semua' || (f === 'disukai' ? favorites.includes(t.id) : f === 'offline' ? downloaded.has(t.id) : t.genre === f));
   return (
     <div className="page">
-      <h1>Pustaka</h1>
+      <PageSky weather={f !== 'semua' && f !== 'disukai' && f !== 'offline' ? weatherFor(f) : 'dusk'} title="Pustaka" sub={status === 'ready' ? `${list.length} lagu` : undefined} />
       <div className="chips" role="group" aria-label="Filter">
         <Chip active={f === 'semua'} onClick={() => setF('semua')}>Semua</Chip>
         <Chip active={f === 'disukai'} onClick={() => setF('disukai')}>Disukai</Chip>
@@ -176,7 +178,7 @@ export function Downloads() {
   const used = mine.reduce((n, t) => n + t.size, 0);
   return (
     <div className="page">
-      <h1>Unduhan</h1>
+      <PageSky weather="meadow" title="Unduhan" sub={status === 'ready' ? `${mine.length} lagu di perangkat · ${formatSize(used)}` : undefined} />
       <div className="setting wd-glass">
         <Icon name="wifioff" width={26} height={26} />
         <div className="setting__text"><strong id="off">Mode offline</strong><span className="caption">Hanya memutar lagu yang sudah diunduh. Hemat kuota.{!online && ' Kamu sedang tanpa internet.'}</span></div>
@@ -262,6 +264,7 @@ export function Search() {
     return t.source === 'jamendo' && found.key === key && found.ids.has(t.id) ? [{ t, line: undefined }] : [];
   }), [term, inGenre, lyr, found, key]);
 
+  const skyWeather = weatherFor(genre ?? results[0]?.t.genre ?? 'lofi');
   const submit = (e: React.FormEvent) => { e.preventDefault(); addRecentSearch(q); inputRef.current?.blur(); };
   const onKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Escape') { if (q) setQ(''); else inputRef.current?.blur(); } };
   const pickRecent = (t: string) => { setQ(t); inputRef.current?.focus(); };
@@ -277,7 +280,7 @@ export function Search() {
 
   return (
     <div className="page search">
-      <h1 className="sr-only">Cari</h1>
+      <PageSky weather={skyWeather} title="Cari di langit" sub="Judul, artis, atau potongan lirik" />
       <div className="searchhead">
         <form role="search" onSubmit={submit}>
           <label className="wd-search"><Icon name="search" width={20} height={20} />

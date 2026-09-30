@@ -203,3 +203,16 @@ export function TimedSky({ trackId, duration, fallbackT = 0, interactive = false
   const t = isCurrent ? fraction(time, total) : fallbackT;
   return <Sky {...rest} t={t} duration={total} live={isCurrent && playing} onScrub={interactive && isCurrent ? seek : undefined} />;
 }
+
+/** Pita langit statis di kepala halaman (Cari, Pustaka, Unduhan): judul di atas langit, tanpa animasi. */
+export function PageSky({ weather, title, sub, t = 0.85 }: { weather: Weather; title: string; sub?: string; t?: number }) {
+  return (
+    <header className="pagesky">
+      <Sky className="pagesky__sky" weather={weather} vbH={230} baseFrac={0.7} t={t} duration={0} live={false} arc={false} />
+      <div className="pagesky__text" style={{ color: SKY[weather].ink }}>
+        <h1>{title}</h1>
+        {sub && <p>{sub}</p>}
+      </div>
+    </header>
+  );
+}

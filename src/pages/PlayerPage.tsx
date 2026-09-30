@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { currentTrack, next, prev, usePlayer } from '@/audio/engine';
+import { currentTrack, next, prev, trackById, usePlayer } from '@/audio/engine';
 import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
 import { FavoriteButton } from '@/components/parts';
 import { TimedSky } from '@/components/Sky';
 import { SKY, weatherFor } from '@/lib/sky';
+import { GENRE_LABEL } from '@/lib/types';
 import { Wada } from '@/components/Wada';
 import { Icon } from '@/components/Icon';
 import { CloudLyrics, Lyrics, Transport } from '@/components/Player';
@@ -60,7 +61,7 @@ export default function PlayerPage() {
       {lyricsView && <div className="lw__full"><Lyrics /></div>}
       <div className="lw__sheet">
         <div className="full__meta" {...swipe}>
-          <div><h1>{track.title}</h1><p className="muted">{track.artist} · {track.album}</p></div>
+          <div><h1>{track.title}</h1><p className="muted">{track.artist} · {GENRE_LABEL[track.genre]}</p></div>
           <FavoriteButton id={track.id} title={track.title} />
         </div>
         {track.license && (
@@ -70,8 +71,23 @@ export default function PlayerPage() {
           </p>
         )}
         <div className="full__controls"><Transport big /></div>
-        <p className="caption lw__hint">Geser matahari untuk melompat ke bagian lain lagu.</p>
+        <NextUp />
       </div>
     </section>
+  );
+}
+
+/** Lagu berikutnya di antrean (bila urutan tidak diacak). Ketuk untuk membuka antrean. */
+function NextUp() {
+  const { queue, currentId, shuffle, repeat } = usePlayer();
+  useLibrary((s) => s.tracks);
+  const i = currentId ? queue.indexOf(currentId) : -1;
+  const nextId = i < 0 || shuffle ? undefined : queue[i + 1] ?? (repeat === 'all' && queue.length > 1 ? queue[0] : undefined);
+  const t = trackById(nextId ?? null);
+  if (!t) return null;
+  return (
+    <button type="button" className="nextup" onClick={() => useUi.setState({ queueSheet: true })} aria-label={`Berikutnya: ${t.title}, ${t.artist}. Buka antrean`}>
+      <strong>Berikutnya</strong><span>{t.title} · {t.artist}</span>
+    </button>
   );
 }

@@ -95,7 +95,7 @@ export function Nav() {
       <div className="wd-nav">
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end={n.to === '/'} onClick={n.to === '/cari' ? focusSearch : undefined}>
-            <span><Icon name={n.icon} width={22} height={22} /></span>{n.label}
+            <span><Icon name={n.icon} width={22} height={22} /></span><em className="wd-nav__label">{n.label}</em>
           </NavLink>
         ))}
       </div>
