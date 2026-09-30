@@ -8,12 +8,6 @@ export const ACCENTS = ['lilac', 'sage', 'peach', 'sky', 'rose', 'butter'] as co
 export type AccentName = (typeof ACCENTS)[number];
 export const ACCENT_LABEL: Record<AccentName, string> = { lilac: 'Lilac', sage: 'Sage', peach: 'Peach', sky: 'Sky', rose: 'Rose', butter: 'Butter' };
 
-/** Nada warna dan motif sampul datar (menggantikan gradien mesh). */
-export const TONES = ['peach', 'mint', 'lilac', 'butter', 'sky', 'rose'] as const;
-export type ToneName = (typeof TONES)[number];
-export const MOTIFS = ['moon', 'star', 'wave', 'note', 'sun', 'leaf'] as const;
-export type MotifName = (typeof MOTIFS)[number];
-
 export interface License { label: string; url: string }
 
 export interface Track {

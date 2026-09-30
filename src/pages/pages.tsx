@@ -13,8 +13,8 @@ import { greetingFor, quickPicks } from '@/lib/home';
 import { useSettings } from '@/store/settings';
 import { Art, Chip, Highlight, SongRow, Switch } from '@/components/parts';
 import { Wada } from '@/components/Wada';
-import { Motif } from '@/components/Motif';
-import { GENRE_STYLE } from '@/lib/style';
+import { SkyMini, TimedSky } from '@/components/Sky';
+import { SKY, weatherFor } from '@/lib/sky';
 import { Icon } from '@/components/Icon';
 import { InstallBanner } from '@/components/Overlays';
 
@@ -83,30 +83,37 @@ export function Home() {
 
   return (
     <div className="page home">
-      <header className="home__hello">
-        <Wada size={64} mood={running ? 'sing' : 'happy'} bounce={running} />
-        <div>
-          <p className="hello__greet">{greetingFor(new Date().getHours())}</p>
-          <h1>Mau dengar apa?</h1>
-        </div>
-      </header>
       <OfflineNotice />
       <InstallBanner />
       <Loading status={status} />
       {status === 'ready' && !hero && <Empty title="Belum ada lagu">Katalog masih kosong.</Empty>}
+      {!hero && status !== 'ready' && (
+        <header className="home__hello">
+          <Wada size={64} mood="happy" />
+          <div><p className="hello__greet">{greetingFor(new Date().getHours())}</p><h1>Mau dengar apa?</h1></div>
+        </header>
+      )}
       {hero && (
-        <div className="continue wd-glass" data-genre={hero.genre}>
-          <Link to="/putar" className="continue__open" aria-label={`Buka pemutar: ${hero.title}`}>
-            <Art genre={hero.genre} src={hero.artwork} className="continue__art" />
-            <span className="continue__text">
-              <span className="overline">{resumed || isCurrent ? 'Terakhir diputar' : `Mix harian · ${tracks.length} lagu`}</span>
-              <span className="continue__title" style={{ display: 'block' }}>{hero.title}</span>
-              <span className="caption" style={{ display: 'block' }}>{hero.artist}</span>
-              {progress > 0 && <span className="continue__progress" role="img" aria-label={`Sudah didengarkan ${Math.round(progress)} persen`} style={{ display: 'block' }}><i style={{ width: `${progress}%` }} /></span>}
-            </span>
-          </Link>
-          <button type="button" className="continue__play" aria-label={running ? 'Jeda' : resumed || isCurrent ? 'Lanjutkan' : 'Putar'} onClick={heroAction}><Icon name={running ? 'pause' : 'play'} /></button>
-        </div>
+        <section className="lhero" data-genre={hero.genre} aria-label="Langit hari ini">
+          <TimedSky className="lhero__sky" arc={false} weather={weatherFor(hero.genre)} vbH={320} baseFrac={0.8} trackId={hero.id} duration={hero.duration} fallbackT={progress / 100}>
+            <div className="lhero__text">
+              <p className="hello__greet">{greetingFor(new Date().getHours())}</p>
+              <h1>{SKY[weatherFor(hero.genre)].title}</h1>
+              <p className="lhero__sub">Langit ini memutar {GENRE_LABEL[hero.genre]}</p>
+            </div>
+            <Wada className="lhero__wada" size={72} mood={running ? 'sing' : 'happy'} bounce={running} />
+          </TimedSky>
+          <div className="lhero__now">
+            <button type="button" className="continue__play" aria-label={running ? 'Jeda' : resumed || isCurrent ? 'Lanjutkan' : 'Putar'} onClick={heroAction}><Icon name={running ? 'pause' : 'play'} /></button>
+            <Link to="/putar" className="continue__open" aria-label={`Buka pemutar: ${hero.title}`}>
+              <span className="continue__text">
+                <span className="overline">{resumed || isCurrent ? 'Terakhir diputar' : `Mix harian · ${tracks.length} lagu`}</span>
+                <span className="continue__title" style={{ display: 'block' }}>{hero.title}</span>
+                <span className="caption" style={{ display: 'block' }}>{hero.artist}</span>
+              </span>
+            </Link>
+          </div>
+        </section>
       )}
       {loadingRemote && <p className="caption" role="status">Memuat lagu dari Jamendo…</p>}
       {!!tracks.length && <>
@@ -298,7 +305,7 @@ export function Search() {
           <section className="section" aria-labelledby="genre-h">
             <h2 id="genre-h">Jelajahi genre</h2>
             <div className="genre-grid">{GENRES.map((g) => (
-              <button key={g} type="button" className={`tile tone-${GENRE_STYLE[g].tone}`} data-genre={g} onClick={() => setGenre(g)}><span>{GENRE_LABEL[g]}<small>{counts[g]} lagu</small></span><Motif name={GENRE_STYLE[g].motif} className="tile__motif" /></button>))}</div>
+              <button key={g} type="button" className="tile" data-genre={g} onClick={() => setGenre(g)}><SkyMini weather={weatherFor(g)} /><span className="tile__label" style={{ color: SKY[weatherFor(g)].ink }}>{GENRE_LABEL[g]}<small>{SKY[weatherFor(g)].title} · {counts[g]} lagu</small></span></button>))}</div>
           </section>
           <p className="search__hint"><Wada size={44} mood="sing" />Ingat liriknya, lupa judulnya? Ketik potongan liriknya di kolom atas.</p>
         </>

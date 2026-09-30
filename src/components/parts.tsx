@@ -9,13 +9,13 @@ import { useLibrary } from '@/store/library';
 import { useOnline } from '@/audio/hooks';
 import { useSettings } from '@/store/settings';
 import { useSession } from '@/store/session';
-import { GENRE_STYLE } from '@/lib/style';
+import { weatherFor } from '@/lib/sky';
+import { SkyMini } from './Sky';
 import { Icon } from './Icon';
-import { Motif } from './Motif';
 
 export const Art = ({ genre, src, className = '' }: { genre: Genre; src?: string; className?: string }) => (
-  <div className={`wd-art tone-${GENRE_STYLE[genre].tone} ${className}`} data-genre={genre} aria-hidden="true">
-    <Motif name={GENRE_STYLE[genre].motif} className="wd-art__motif" />
+  <div className={`wd-art ${className}`} data-genre={genre} aria-hidden="true">
+    <SkyMini weather={weatherFor(genre)} />
     {src && <img src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onLoad={(e) => e.currentTarget.classList.add('is-loaded')} onError={(e) => e.currentTarget.remove()} />}
   </div>
 );
