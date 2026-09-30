@@ -1,5 +1,5 @@
 # Warnada
-test
+
 Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan **diputar offline**. Tampilan "cute & tenang": latar krem hangat (atau ungu malam), sampul datar bermotif, huruf bulat (Fredoka + Nunito), dan satu aksen halus yang bisa mengikuti genre lagu. Maskotnya Wada, kucing berkuping headphone.
 
 ## Fitur
