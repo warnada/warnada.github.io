@@ -36,13 +36,30 @@ export function Progress({ compact = false }: { compact?: boolean }) {
   );
 }
 
+/** Tombol putar berbentuk piringan hitam + jarum: berputar saat memutar, jarum turun ke piringan; jeda = berhenti dan jarum terangkat. */
+function VinylPlay() {
+  const { playing, buffering } = usePlayer();
+  return (
+    <button type="button" className="vinyl" data-playing={playing} aria-label={playing ? 'Jeda' : 'Putar'} onClick={toggle}>
+      <span className="vinyl__disc" aria-hidden="true"><span className="vinyl__shine" /><span className="vinyl__label" /><span className="vinyl__hole" /></span>
+      <span className="vinyl__glyph" aria-hidden="true">{buffering && !playing ? <span className="ring" /> : <Icon name={playing ? 'pause' : 'play'} />}</span>
+      <svg className="vinyl__arm" viewBox="0 0 40 100" aria-hidden="true" focusable="false">
+        <circle cx="30" cy="10" r="8" fill="#E9E3F0" stroke="#3D3345" strokeOpacity=".4" strokeWidth="2" />
+        <path d="M30 10 L30 62 L14 88" fill="none" stroke="#E9E3F0" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M30 10 L30 62 L14 88" fill="none" stroke="#3D3345" strokeOpacity=".4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="6" y="84" width="14" height="10" rx="3" fill="#3D3345" transform="rotate(-28 13 89)" />
+      </svg>
+    </button>
+  );
+}
+
 export function Transport({ big = false }: { big?: boolean }) {
   const { playing, shuffle, repeat, buffering } = usePlayer();
   return (
     <div className="wd-transport" role="group" aria-label="Kontrol pemutar">
       {big && <button type="button" className={shuffle ? 'on' : 'is-muted'} aria-label="Acak" aria-pressed={shuffle} onClick={toggleShuffle}><Icon name="shuffle" /></button>}
       <button type="button" className="fill" aria-label="Sebelumnya" onClick={prev}><Icon name="prev" /></button>
-      <button type="button" className="wd-play" aria-label={playing ? 'Jeda' : 'Putar'} onClick={toggle}>{buffering && !playing ? <span className="ring" /> : <Icon name={playing ? 'pause' : 'play'} />}</button>
+      {big ? <VinylPlay /> : <button type="button" className="wd-play" aria-label={playing ? 'Jeda' : 'Putar'} onClick={toggle}>{buffering && !playing ? <span className="ring" /> : <Icon name={playing ? 'pause' : 'play'} />}</button>}
       <button type="button" className="fill" aria-label="Berikutnya" onClick={next}><Icon name="next" /></button>
       {big && <button type="button" className={repeat !== 'off' ? 'on' : 'is-muted'} aria-label={`Ulangi: ${repeat === 'off' ? 'mati' : repeat === 'all' ? 'semua' : 'satu lagu'}`} onClick={cycleRepeat}><Icon name="repeat" />{repeat === 'one' && <small style={{ position: 'absolute', fontSize: 9, fontWeight: 800 }}>1</small>}</button>}
     </div>

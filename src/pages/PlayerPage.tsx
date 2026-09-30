@@ -73,7 +73,7 @@ export default function PlayerPage() {
   );
   const weather = weatherFor(track.genre);
   return (
-    <section ref={root} className={`full lw ${lyricsView ? 'lw--lyrics' : ''}`} data-genre={track.genre} data-weather={weather} aria-label="Pemutar" style={{ '--sk-ink': SKY[weather].ink } as React.CSSProperties} {...drag}>
+    <section ref={root} className={`full lw ${lyricsView ? 'lw--lyrics' : ''}`} data-genre={track.genre} data-weather={weather} aria-label="Pemutar" style={{ '--sk-ink': SKY[weather].ink, '--lw-tint': SKY[weather].tint, '--lw-tint-ink': SKY[weather].tintInk } as React.CSSProperties} {...drag}>
       <div className="full__top lw__top">
         <button type="button" className="icon-btn" aria-label="Tutup pemutar" onClick={back}><Icon name="chevdown" /></button>
         <span className="lw__weather"><small>Mengudara di</small>{SKY[weather].title}</span>

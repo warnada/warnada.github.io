@@ -10,17 +10,19 @@ export interface SkyPalette {
   hills: readonly [string, string, string];
   /** teks di atas langit (gelap untuk langit terang, terang untuk aurora) */
   ink: string;
+  /** warna label tombol piringan dan teks di atasnya */
+  tint: string; tintInk: string;
   night: boolean;
   particle: 'rain' | 'petal' | 'stars' | 'none';
 }
 
 export const SKY: Record<Weather, SkyPalette> = {
-  rain: { label: 'Hujan', title: 'Hujan senja', top: '#AEB9E3', bottom: '#E9DFF1', sun: '#FFF1CF', cloud: '#F4EFFC', cloud2: '#CBC7EA', hills: ['#A8ABD8', '#8E92C6', '#767CB2'], ink: '#2E2A55', night: false, particle: 'rain' },
-  sunny: { label: 'Cerah', title: 'Cerah ceria', top: '#A9DCFA', bottom: '#FFF2D2', sun: '#FFCF5C', cloud: '#FFFFFF', cloud2: '#EAF6FF', hills: ['#B4E2B2', '#93D19E', '#72BD88'], ink: '#26485E', night: false, particle: 'none' },
-  sunset: { label: 'Senja', title: 'Senja membara', top: '#FFA995', bottom: '#FFE3B5', sun: '#FF7F5E', cloud: '#FFD0BC', cloud2: '#FFF1DE', hills: ['#E8907F', '#CB6F6F', '#A85770'], ink: '#5A2A38', night: false, particle: 'none' },
-  dusk: { label: 'Remang', title: 'Remang ungu', top: '#B99AD6', bottom: '#F8D7B4', sun: '#FFC985', cloud: '#E9D3EE', cloud2: '#FBEBDD', hills: ['#A585B4', '#876AA0', '#6C5688'], ink: '#3F2A57', night: false, particle: 'stars' },
-  aurora: { label: 'Aurora', title: 'Langit aurora', top: '#262B5E', bottom: '#4E5498', sun: '#F6F3FF', cloud: '#5C63A8', cloud2: '#454C8C', hills: ['#38427A', '#2C3568', '#212956'], ink: '#F3F0FF', night: true, particle: 'stars' },
-  meadow: { label: 'Padang', title: 'Padang pagi', top: '#C8ECD6', bottom: '#FFF3CE', sun: '#FFE07A', cloud: '#FFFFFF', cloud2: '#F0FAE9', hills: ['#BFE3A8', '#9CD08D', '#7BBB78'], ink: '#2D4A33', night: false, particle: 'petal' }
+  rain: { label: 'Hujan', title: 'Hujan senja', top: '#AEB9E3', bottom: '#E9DFF1', sun: '#FFF1CF', cloud: '#F4EFFC', cloud2: '#CBC7EA', hills: ['#A8ABD8', '#8E92C6', '#767CB2'], ink: '#2E2A55', tint: '#C9C4F0', tintInk: '#2E2A55', night: false, particle: 'rain' },
+  sunny: { label: 'Cerah', title: 'Cerah ceria', top: '#A9DCFA', bottom: '#FFF2D2', sun: '#FFCF5C', cloud: '#FFFFFF', cloud2: '#EAF6FF', hills: ['#B4E2B2', '#93D19E', '#72BD88'], ink: '#26485E', tint: '#FFD66B', tintInk: '#4A3A12', night: false, particle: 'none' },
+  sunset: { label: 'Senja', title: 'Senja membara', top: '#FFA995', bottom: '#FFE3B5', sun: '#FF7F5E', cloud: '#FFD0BC', cloud2: '#FFF1DE', hills: ['#E8907F', '#CB6F6F', '#A85770'], ink: '#5A2A38', tint: '#FFB199', tintInk: '#5A2A38', night: false, particle: 'none' },
+  dusk: { label: 'Remang', title: 'Remang ungu', top: '#B99AD6', bottom: '#F8D7B4', sun: '#FFC985', cloud: '#E9D3EE', cloud2: '#FBEBDD', hills: ['#A585B4', '#876AA0', '#6C5688'], ink: '#3F2A57', tint: '#E3C1EE', tintInk: '#3F2A57', night: false, particle: 'stars' },
+  aurora: { label: 'Aurora', title: 'Langit aurora', top: '#262B5E', bottom: '#4E5498', sun: '#F6F3FF', cloud: '#5C63A8', cloud2: '#454C8C', hills: ['#38427A', '#2C3568', '#212956'], ink: '#F3F0FF', tint: '#B8C0FF', tintInk: '#1F2350', night: true, particle: 'stars' },
+  meadow: { label: 'Padang', title: 'Padang pagi', top: '#C8ECD6', bottom: '#FFF3CE', sun: '#FFE07A', cloud: '#FFFFFF', cloud2: '#F0FAE9', hills: ['#BFE3A8', '#9CD08D', '#7BBB78'], ink: '#2D4A33', tint: '#CDEBB0', tintInk: '#2D4A33', night: false, particle: 'petal' }
 };
 
 const GENRE_WEATHER: Record<Genre, Weather> = {
