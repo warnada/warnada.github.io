@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useSta
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSettings } from '@/store/settings';
 import { useLibrary } from '@/store/library';
-import { useUi } from '@/store/ui';
+import { toast, useUi } from '@/store/ui';
 import { currentTrack, next, prev, restoreLast, seekBy, toggle, usePlayer } from '@/audio/engine';
 import { keyInfo, SEEK_STEP_SECONDS, shortcutFor } from '@/lib/shortcuts';
 import { pageTitle } from '@/lib/title';
@@ -101,7 +101,45 @@ const TAB_SLIDE_MS = 320;
 const TAB_EASE = 'cubic-bezier(.22,.8,.26,1)';
 const TAB_SAFETY_MS = 1500;
 const TAB_TRAVEL = 0.22; // jarak geser (fraksi lebar) selama transisi blur
-const TAB_BLUR_PX = 8;
+const TAB_BLUR_PX = 4;
+const TAB_BLUR_SHARE = 0.4; // blur hanya di 40% awal durasi: layer besar tidak di-blur sepanjang transisi
+const TAB_SLOW_FRAME_MS = 32; // frame selama transisi yang dianggap patah
+const TAB_VERY_SLOW_MS = 100;
+const TAB_LATE_COMMIT_MS = 160; // halaman baru baru terpasang selama ini setelah jari dilepas = render terlalu berat untuk blur
+const TAB_SLOW_LIMIT = 2; // sebanyak ini frame patah = turunkan ke mode tanpa blur
+
+/**
+ * Blur pada layer selebar layar mahal untuk GPU ponsel lemah. Dipakai bila pengguna mengizinkannya (Tampilan → Transisi blur),
+ * perangkat terlihat mampu, dan tidak ada preferensi transparansi dikurangi; selain itu cukup geser + pudar (murah).
+ */
+function blurAllowed(): boolean {
+  if (!useSettings.getState().blurTransition) return false;
+  if (matchMedia('(prefers-reduced-transparency: reduce)').matches) return false;
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  return (nav.deviceMemory ?? 8) > 3 && (navigator.hardwareConcurrency ?? 8) > 4;
+}
+function demoteBlur() {
+  useSettings.getState().set({ blurTransition: false });
+  toast('Transisi blur dimatikan otomatis agar tetap mulus. Bisa dinyalakan lagi di menu Tampilan.');
+}
+
+/** Pantau frame selama animasi; bila ada frame patah berulang di mode blur, turunkan ke mode murah untuk seterusnya. */
+function watchFrames(anims: Animation[], blur: boolean) {
+  if (!blur) return;
+  let last: number | null = null, slow = 0, skip = 2, stop = false; // 2 frame pertama = biaya memasang halaman baru
+  const tick = (now: number) => {
+    if (stop) return;
+    const dt = last === null ? 0 : now - last;
+    if (dt > TAB_VERY_SLOW_MS) slow += TAB_SLOW_LIMIT; // satu frame sangat lambat sudah cukup (perangkat jelas tidak kuat)
+    else if (skip > 0) skip--;
+    else if (dt > TAB_SLOW_FRAME_MS) slow++;
+    last = now;
+    if (slow >= TAB_SLOW_LIMIT) { demoteBlur(); stop = true; return; }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  void Promise.all(anims.map((a) => a.finished.catch(() => undefined))).then(() => { stop = true; });
+}
 
 /** Manipulasi DOM untuk animasi geser antarmenu. Sengaja di luar komponen: ini gaya sementara per-frame, bukan state React. */
 const tabDom = {
@@ -144,19 +182,21 @@ const tabDom = {
     return { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : TAB_SLIDE_MS, easing: TAB_EASE, fill: 'both' };
   },
   /** Halaman lama keluar SEGERA (compositor, tidak menunggu render halaman baru): bergeser sedikit, memudar, dan memburam. */
-  out(ghost: HTMLElement, dir: Dir, fromX: number, width: number): Animation {
+  out(ghost: HTMLElement, dir: Dir, fromX: number, width: number, blur: boolean): Animation {
     const sign = dir === 'next' ? 1 : -1;
     return ghost.animate([
-      { transform: `translate3d(${fromX}px,0,0)`, opacity: 1, filter: 'blur(0px)' },
-      { transform: `translate3d(${fromX - sign * width * TAB_TRAVEL}px,0,0)`, opacity: 0, filter: `blur(${TAB_BLUR_PX}px)` }
+      { transform: `translate3d(${fromX}px,0,0)`, opacity: 1, ...(blur && { filter: 'blur(0px)' }) },
+      ...(blur ? [{ offset: TAB_BLUR_SHARE, opacity: 0.6, filter: `blur(${TAB_BLUR_PX}px)` }] : []),
+      { transform: `translate3d(${fromX - sign * width * TAB_TRAVEL}px,0,0)`, opacity: 0, ...(blur && { filter: `blur(${TAB_BLUR_PX}px)` }) }
     ], tabDom.timing());
   },
   /** Halaman baru masuk dari sisi lawan: mulai buram dan transparan lalu menajam. Diselaraskan dengan waktu berjalan animasi keluar (jam dinding). */
-  enter(page: HTMLElement, elapsedMs: number, dir: Dir, fromX: number, width: number): Animation {
+  enter(page: HTMLElement, elapsedMs: number, dir: Dir, fromX: number, width: number, blur: boolean): Animation {
     const sign = dir === 'next' ? 1 : -1;
     const a = page.animate([
-      { transform: `translate3d(${sign * width * TAB_TRAVEL + fromX}px,0,0)`, opacity: 0, filter: `blur(${TAB_BLUR_PX}px)` },
-      { transform: 'translate3d(0,0,0)', opacity: 1, filter: 'blur(0px)' }
+      { transform: `translate3d(${sign * width * TAB_TRAVEL + fromX}px,0,0)`, opacity: 0, ...(blur && { filter: `blur(${TAB_BLUR_PX}px)` }) },
+      ...(blur ? [{ offset: TAB_BLUR_SHARE, opacity: 0.7, filter: 'blur(0px)' }] : []),
+      { transform: 'translate3d(0,0,0)', opacity: 1, ...(blur && { filter: 'blur(0px)' }) }
     ], tabDom.timing());
     a.currentTime = elapsedMs;
     return a;
@@ -169,7 +209,7 @@ function schedule(fn: () => void, ms: number) {
 }
 function cancelScheduled() { timerIds.forEach(clearTimeout); timerIds.clear(); }
 
-interface PendingSlide { dir: Dir; fromX: number; ghost: HTMLElement | null; out: Animation | null; width: number; startedAt: number }
+interface PendingSlide { dir: Dir; fromX: number; ghost: HTMLElement | null; out: Animation | null; width: number; startedAt: number; blur: boolean }
 
 /**
  * Geser kiri/kanan berpindah antarmenu (Beranda, Cari, Pustaka, Unduhan). Halaman mengikuti jari lewat CSS variable
@@ -198,8 +238,10 @@ function useTabSwipe(getMain: () => HTMLElement | null) {
     const fresh = tabDom.page(el);
     el.scrollTop = 0; // halaman baru selalu mulai dari atas; ghost sudah membawa posisi gulir lama
     if (p.ghost) p.ghost.style.top = '0px'; // ghost tetap di layar walau isi gulir kembali ke atas
-    const anims = [p.out, fresh ? tabDom.enter(fresh, performance.now() - p.startedAt, p.dir, p.fromX, p.width) : null].filter((a): a is Animation => !!a);
+    const anims = [p.out, fresh ? tabDom.enter(fresh, performance.now() - p.startedAt, p.dir, p.fromX, p.width, p.blur) : null].filter((a): a is Animation => !!a);
     if (!anims.length) { finish(el, p.ghost, []); return; }
+    if (p.blur && performance.now() - p.startedAt > TAB_LATE_COMMIT_MS) demoteBlur();
+    else watchFrames(anims, p.blur);
     void Promise.all(anims.map((a) => a.finished.catch(() => undefined))).then(() => finish(el, p.ghost, anims));
   }, [pathname, getMain]);
 
@@ -228,8 +270,9 @@ function useTabSwipe(getMain: () => HTMLElement | null) {
       const fromX = parseFloat(el.style.getPropertyValue('--tx')) || 0;
       const ghost = tabDom.ghost(el);
       tabDom.clear(el);
-      const out = ghost ? tabDom.out(ghost, dir, fromX, width) : null;
-      pending.current = { dir, fromX, ghost, out, width, startedAt: performance.now() };
+      const blur = blurAllowed();
+      const out = ghost ? tabDom.out(ghost, dir, fromX, width, blur) : null;
+      pending.current = { dir, fromX, ghost, out, width, startedAt: performance.now(), blur };
       navigate(target, { state: { swipe: true } });
       schedule(() => { // pengaman: navigasi tidak terjadi
         const p = pending.current;
