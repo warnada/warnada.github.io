@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { currentTrack, next, prev, trackById, usePlayer } from '@/audio/engine';
 import { useLibrary } from '@/store/library';
@@ -12,7 +12,11 @@ import { Icon } from '@/components/Icon';
 import { CloudLyrics, Lyrics, Transport } from '@/components/Player';
 import { canDownload } from '@/lib/offline';
 import { useOnline } from '@/audio/hooks';
-import { useSwipe } from '@/lib/useSwipe';
+import { useAxisDrag } from '@/lib/useAxisDrag';
+
+/** Area yang punya geser/gulir sendiri: gestur atas/bawah tidak dimulai dari sini. */
+const SWIPE_BLOCKED = '.sky__slider, .full__lyrics, input, textarea';
+const SWAP_MS = 420;
 
 export default function PlayerPage() {
   const navigate = useNavigate();
@@ -25,7 +29,35 @@ export default function PlayerPage() {
   const online = useOnline();
   const busy = useLibrary((s) => (id ? s.busy.has(id) : false));
   const back = useCallback(() => { if (history.length > 1) navigate(-1); else navigate('/'); }, [navigate]);
-  const swipe = useSwipe(['close', 'next', 'prev'], (a) => { if (a === 'close') back(); else if (a === 'next') next(); else prev(); });
+  const root = useRef<HTMLElement>(null);
+  const swapTimer = useRef(0);
+  // Geser atas = berikutnya, bawah = sebelumnya. Konten mengikuti jari (CSS variable, tanpa render ulang), lalu masuk dari arah lawan.
+  const drag = useAxisDrag({
+    axis: 'y',
+    accepts: (t) => !t.closest(SWIPE_BLOCKED) && !useUi.getState().queueSheet && !useUi.getState().themeSheet,
+    size: () => Math.min(root.current?.clientHeight ?? 320, 320), // ambang jadi ≈ 90px; tidak perlu menyeret sepanjang layar
+    onDrag: (d) => {
+      const el = root.current;
+      if (!el) return;
+      el.dataset.dragging = 'true';
+      el.style.setProperty('--sw', `${(d * 0.45).toFixed(1)}px`);
+      el.style.setProperty('--so', `${Math.max(0.35, 1 - Math.abs(d) / 320).toFixed(2)}`);
+    },
+    onEnd: (d, committed) => {
+      const el = root.current;
+      if (!el) return;
+      delete el.dataset.dragging;
+      el.style.setProperty('--sw', '0px'); el.style.setProperty('--so', '1');
+      if (!committed) return;
+      const before = usePlayer.getState().currentId;
+      if (d < 0) next(); else prev();
+      if (usePlayer.getState().currentId === before) return; // tidak pindah (ujung antrean / mulai ulang): cukup kembali ke posisi
+      el.dataset.swap = d < 0 ? 'up' : 'down';
+      window.clearTimeout(swapTimer.current);
+      swapTimer.current = window.setTimeout(() => { delete el.dataset.swap; }, SWAP_MS);
+    }
+  });
+  useEffect(() => () => window.clearTimeout(swapTimer.current), []);
   useEffect(() => { // Esc menutup pemutar, kecuali ada sheet terbuka (Esc itu milik sheet)
     const onKey = (e: KeyboardEvent) => {
       const { queueSheet, themeSheet } = useUi.getState();
@@ -41,8 +73,8 @@ export default function PlayerPage() {
   );
   const weather = weatherFor(track.genre);
   return (
-    <section className={`full lw ${lyricsView ? 'lw--lyrics' : ''}`} data-genre={track.genre} data-weather={weather} aria-label="Pemutar" style={{ '--sk-ink': SKY[weather].ink } as React.CSSProperties}>
-      <div className="full__top lw__top" {...swipe}>
+    <section ref={root} className={`full lw ${lyricsView ? 'lw--lyrics' : ''}`} data-genre={track.genre} data-weather={weather} aria-label="Pemutar" style={{ '--sk-ink': SKY[weather].ink, '--lw-tint': SKY[weather].tint, '--lw-tint-ink': SKY[weather].tintInk } as React.CSSProperties} {...drag}>
+      <div className="full__top lw__top">
         <button type="button" className="icon-btn" aria-label="Tutup pemutar" onClick={back}><Icon name="chevdown" /></button>
         <span className="lw__weather"><small>Mengudara di</small>{SKY[weather].title}</span>
         <div className="full__actions">
@@ -55,12 +87,12 @@ export default function PlayerPage() {
       </div>
       <div className="lw__stage">
         <TimedSky className="lw__sky" weather={weather} vbH={600} baseFrac={0.52} trackId={track.id} duration={track.duration} interactive />
-        <div className="lw__clouds" {...swipe}><CloudLyrics /></div>
+        <div className="lw__clouds"><CloudLyrics /></div>
         <Wada className="lw__wada" size={96} mood={playing ? 'sing' : 'sleep'} bounce={playing} />
       </div>
       {lyricsView && <div className="lw__full"><Lyrics /></div>}
       <div className="lw__sheet">
-        <div className="full__meta" {...swipe}>
+        <div className="full__meta">
           <div><h1>{track.title}</h1><p className="muted">{track.artist} · {GENRE_LABEL[track.genre]}</p></div>
           <FavoriteButton id={track.id} title={track.title} />
         </div>

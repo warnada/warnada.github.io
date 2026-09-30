@@ -20,7 +20,7 @@ Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan 
 - **Beranda**: hero langit sesuai lagu terakhir, dengan sapaan, tombol lanjutkan, pilihan cepat (favorit → riwayat), dan rak suasana.
 - **Disukai**: ikon hati di setiap lagu; filter "Disukai" di Pustaka dan rak di Beranda. Tersimpan di perangkat.
 - **Antrean**: lihat, putar dari, dan hapus item antrean (sheet di HP/tablet, tab di panel desktop).
-- **Gestur**: geser ke bawah menutup pemutar; geser kiri/kanan pada awan lirik, judul lagu, atau mini player pindah lagu.
+- **Gestur**: geser kiri/kanan pindah menu (Beranda, Cari, Pustaka, Unduhan); di pemutar geser atas = lagu berikutnya, bawah = sebelumnya; geser kiri/kanan pada mini player pindah lagu. Konten mengikuti jari lewat CSS variable (hanya transform/opacity), sumbu dikunci sejak awal sehingga gulir biasa tetap bekerja, dan area yang punya geser sendiri (chip, matahari, lirik penuh) dikecualikan. Tutup pemutar lewat tombol atau Esc.
 - **Responsif** mobile-first sampai layar lebar (container query): bottom nav (HP) → rail (tablet) → sidebar + panel lirik (laptop). Pemutar dua kolom (langit + kontrol) di tablet/laptop, dan mode landscape pendek untuk ponsel. Menghormati `prefers-reduced-motion` dan `prefers-reduced-transparency`.
 
 ## Stack

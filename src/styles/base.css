@@ -523,7 +523,7 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
 .lw[data-weather="aurora"] .cloud:not(.cloud--now),.lw[data-weather="aurora"] .clouds__none{background:rgba(20,20,70,.4)}
 .cloud:focus-visible{outline:2px solid var(--sk-ink);outline-offset:2px}
 
-@media (min-width:700px),(max-height:520px) and (orientation:landscape){
+@media (min-width:900px),(max-height:520px) and (orientation:landscape){
   .lw{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);grid-template-rows:auto 1fr}
   .lw__stage{grid-column:1;grid-row:1/3;height:auto}
   .lw__clouds{bottom:26%;left:max(112px,18%)}
@@ -633,6 +633,62 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
   .lhero__wada{bottom:60px}
 }
 .lhero__sky .sky__layer--arc{width:auto}
-@media (min-width:700px),(max-height:520px) and (orientation:landscape){
+@media (min-width:900px),(max-height:520px) and (orientation:landscape){
   .lw__top .full__actions .icon-btn{background:var(--glass-1);box-shadow:var(--shadow-soft)}
 }
+
+/* =====================================================================
+   Gestur geser. Konten mengikuti jari lewat CSS variable (--tx / --sw),
+   hanya transform + opacity, sehingga tetap di compositor.
+   ===================================================================== */
+/* antarmenu: geser kiri/kanan (scroll vertikal tetap milik browser) */
+.shell__main{touch-action:pan-y}
+.shell__main[data-swiping]>.page{transform:translate3d(var(--tx,0px),0,0);opacity:var(--to,1);will-change:transform,opacity}
+.shell__main[data-swiping][data-settle]>.page{transition:transform .19s cubic-bezier(.3,.7,.3,1),opacity .19s linear}
+.shell__main[data-enter="next"]>.page{animation:tab-in-next .32s cubic-bezier(.2,.8,.2,1) both}
+.shell__main[data-enter="prev"]>.page{animation:tab-in-prev .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes tab-in-next{from{transform:translate3d(32%,0,0);opacity:0}}
+@keyframes tab-in-prev{from{transform:translate3d(-32%,0,0);opacity:0}}
+
+/* pemutar: geser atas = berikutnya, bawah = sebelumnya */
+.lw{touch-action:none}
+.lw__sheet{overflow:hidden;touch-action:none}
+.lw .full__lyrics{touch-action:pan-y}
+.lw :is(.lw__clouds,.lw__sheet .full__meta,.lw__sheet .nextup){transform:translate3d(0,var(--sw,0px),0);opacity:var(--so,1);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s}
+.lw[data-dragging] :is(.lw__clouds,.lw__sheet .full__meta,.lw__sheet .nextup){transition:none;will-change:transform,opacity}
+@keyframes lw-in-up{from{transform:translate3d(0,40px,0);opacity:0}}
+@keyframes lw-in-down{from{transform:translate3d(0,-40px,0);opacity:0}}
+.lw[data-swap="up"] :is(.lw__clouds,.lw__sheet .full__meta,.lw__sheet .nextup){animation:lw-in-up .4s cubic-bezier(.2,.8,.2,1)}
+.lw[data-swap="down"] :is(.lw__clouds,.lw__sheet .full__meta,.lw__sheet .nextup){animation:lw-in-down .4s cubic-bezier(.2,.8,.2,1)}
+
+/* =====================================================================
+   Tombol putar piringan + jarum (pemutar penuh)
+   ===================================================================== */
+.lw .wd-transport .vinyl{--v:clamp(84px,24vw,104px);position:relative;flex:0 0 auto;width:var(--v);height:var(--v);margin-right:calc(var(--v) * .2);padding:0;border:0;border-radius:50%;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.vinyl__disc{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:50%;background:repeating-radial-gradient(circle,#2A2230 0 2px,#3A3042 2px 3px);box-shadow:0 6px 16px rgba(70,50,110,.28);animation:vspin 4.5s linear infinite;animation-play-state:paused;will-change:transform}
+.vinyl[data-playing="true"] .vinyl__disc{animation-play-state:running}
+.vinyl__shine{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,transparent 0 18%,rgba(255,255,255,.16) 23% 28%,transparent 33% 68%,rgba(255,255,255,.16) 73% 78%,transparent 83%)}
+.vinyl__label{position:relative;width:44%;height:44%;border-radius:50%;background:var(--lw-tint,var(--accent));box-shadow:0 0 0 2px rgba(0,0,0,.25)}
+.vinyl__hole{position:absolute;left:50%;top:50%;width:6%;height:6%;margin:-3% 0 0 -3%;border-radius:50%;background:#FFF8EE;opacity:.9}
+.vinyl__glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--lw-tint-ink,var(--accent-ink));pointer-events:none}
+.vinyl__glyph svg{width:26%;height:26%;fill:currentColor;stroke:none}
+.vinyl__arm{position:absolute;right:-7%;top:-12%;width:36%;height:90%;pointer-events:none;overflow:visible;transform-origin:75% 10%;transform:rotate(-8deg);transition:transform .6s cubic-bezier(.4,1.3,.5,1);filter:drop-shadow(0 3px 4px rgba(50,40,90,.25))}
+.vinyl[data-playing="true"] .vinyl__arm{transform:rotate(16deg)}
+.vinyl:focus-visible{outline:3px solid var(--accent-strong);outline-offset:4px}
+@keyframes vspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.vinyl__disc{animation:none!important}}
+
+/* pemutar: penyempurnaan ke prototipe + responsif HP / tablet / laptop */
+.lw .wd-transport .vinyl__arm{width:36%;height:90%}
+.lw__sheet>*{order:0}
+.lw__sheet{padding-inline:max(var(--space-5),calc(50% - 280px))}
+.lw__clouds{left:max(104px,calc(50% - 150px))}
+.lw__wada{width:clamp(88px,14vw,140px);height:auto}
+@media (max-height:700px) and (max-width:899px){.lw .sky__layer--arc{height:calc(60% - 56px)}}
+@media (min-width:900px),(max-height:520px) and (orientation:landscape){
+  .lw__sheet{padding-inline:var(--space-8)}
+  .lw__clouds{left:max(112px,18%)}
+}
+@media (max-height:700px) and (max-width:899px){.lw .sky__layer--arc{height:calc(54% - 56px)}}
+@media (max-height:520px) and (orientation:landscape){.lw .sky__layer--arc{height:calc(56% - 56px)}}
+@media (min-width:1400px){.lw .wd-transport .vinyl{--v:124px}.lw__sheet .full__meta h1{font-size:38px}.lw__sheet .full__meta p{font-size:17px}}
