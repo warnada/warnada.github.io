@@ -4,6 +4,7 @@ import { currentTrack, next, prev, usePlayer } from '@/audio/engine';
 import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
 import { Art, FavoriteButton } from '@/components/parts';
+import { Wada } from '@/components/Wada';
 import { Icon } from '@/components/Icon';
 import { Lyrics, Progress, Transport } from '@/components/Player';
 import { GENRE_LABEL } from '@/lib/types';
@@ -52,7 +53,10 @@ export default function PlayerPage() {
       <div className="full__body">
         <div className="full__main">
           <div className="full__head" {...swipe}>
-            <Art genre={track.genre} src={track.artwork} className={`full__art ${playing ? '' : 'is-paused'}`} />
+            <div className="full__artwrap">
+              <Art genre={track.genre} src={track.artwork} className={`full__art ${playing ? '' : 'is-paused'}`} />
+              <Wada className="full__wada" size={84} mood={playing ? 'sing' : 'sleep'} bounce={playing} />
+            </div>
             <div className="full__meta">
               <div><h1>{track.title}</h1><p className="muted">{track.artist} · {track.album}</p></div>
               <FavoriteButton id={track.id} title={track.title} />

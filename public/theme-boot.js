@@ -2,8 +2,8 @@
 try {
   var s = (JSON.parse(localStorage.getItem('warnada:settings') || '{}') || {}).state || {};
   var d = document.documentElement;
-  var genres = ['lofi', 'pop', 'rock', 'jazz', 'edm', 'dangdut', 'akustik', 'klasik'];
+  var accents = ['lilac', 'sage', 'peach', 'sky', 'rose', 'butter'];
   if (s.theme === 'light' || s.theme === 'dark') d.dataset.theme = s.theme;
   else if (matchMedia('(prefers-color-scheme: light)').matches) d.dataset.theme = 'light';
-  if (genres.indexOf(s.genre) !== -1) d.dataset.genre = s.genre;
+  if (accents.indexOf(s.accent) !== -1) d.dataset.accent = s.accent;
 } catch { /* pakai bawaan */ }

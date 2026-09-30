@@ -13,6 +13,7 @@ import { Icon } from '@/components/Icon';
 import { QueueSheet, ThemeSheet, Toast, useInstall } from '@/components/Overlays';
 import { Downloads, Home, Library, Search } from '@/pages/pages';
 import { readGenre } from '@/lib/search';
+import { resolveAccent } from '@/lib/style';
 
 const PlayerPage = lazy(() => import('@/pages/PlayerPage'));
 
@@ -24,13 +25,13 @@ function JelajahRedirect() {
 }
 
 function useApplyTheme() {
-  const { genre, theme, followGenre } = useSettings();
+  const { accent, theme, followGenre } = useSettings();
   const id = usePlayer((s) => s.currentId);
   useLibrary((s) => s.tracks);
-  const active = followGenre && id ? currentTrack()?.genre ?? genre : genre;
+  const active = resolveAccent({ follow: followGenre, trackGenre: id ? currentTrack()?.genre : undefined, chosen: accent });
   useEffect(() => {
     const el = document.documentElement;
-    el.dataset.genre = active; el.dataset.theme = theme;
+    el.dataset.accent = active; el.dataset.theme = theme;
     const surface = getComputedStyle(el).getPropertyValue('--surface-base').trim();
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', surface);
   }, [active, theme]);
@@ -87,7 +88,7 @@ function TopBar({ scrolled }: { scrolled: boolean }) {
       {!online && <span className="overline" role="status"><Icon name="wifioff" width={16} height={16} style={{ verticalAlign: '-3px' }} /> Offline</span>}
       {canPrompt && <button type="button" className="wd-btn wd-btn--solid" onClick={install}><Icon name="install" />Pasang</button>}
       <button type="button" className="wd-btn wd-btn--icon" aria-label={theme === 'dark' ? 'Ganti ke tema terang' : 'Ganti ke tema gelap'} onClick={() => set({ theme: theme === 'dark' ? 'light' : 'dark' })}><Icon name={theme === 'dark' ? 'sun' : 'moon'} /></button>
-      <button type="button" className="wd-btn wd-btn--icon" aria-label="Pilih suasana" onClick={() => useUi.setState({ themeSheet: true })}><Icon name="palette" /></button>
+      <button type="button" className="wd-btn wd-btn--icon" aria-label="Pilih warna aksen" onClick={() => useUi.setState({ themeSheet: true })}><Icon name="palette" /></button>
     </header>
   );
 }

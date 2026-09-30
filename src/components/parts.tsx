@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Fragment, type ReactNode } from 'react';
 import type { Genre, Track } from '@/lib/types';
-import { GENRES, GENRE_LABEL } from '@/lib/types';
+import { ACCENTS, ACCENT_LABEL, type AccentName } from '@/lib/types';
 import { formatTime } from '@/lib/format';
 import { FOCUS_SEARCH_EVENT, splitHighlight } from '@/lib/search';
 import { canPlay, playTrack, usePlayer } from '@/audio/engine';
@@ -9,10 +9,13 @@ import { useLibrary } from '@/store/library';
 import { useOnline } from '@/audio/hooks';
 import { useSettings } from '@/store/settings';
 import { useSession } from '@/store/session';
+import { GENRE_STYLE } from '@/lib/style';
 import { Icon } from './Icon';
+import { Motif } from './Motif';
 
 export const Art = ({ genre, src, className = '' }: { genre: Genre; src?: string; className?: string }) => (
-  <div className={`wd-art ${className}`} data-genre={genre} aria-hidden="true">
+  <div className={`wd-art tone-${GENRE_STYLE[genre].tone} ${className}`} data-genre={genre} aria-hidden="true">
+    <Motif name={GENRE_STYLE[genre].motif} className="wd-art__motif" />
     {src && <img src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onLoad={(e) => e.currentTarget.classList.add('is-loaded')} onError={(e) => e.currentTarget.remove()} />}
   </div>
 );
@@ -63,12 +66,13 @@ export function SongRow({ track, queue, showAlbum, highlight }: { track: Track; 
   );
 }
 
-export function GenreSwatches({ value, onPick }: { value: Genre; onPick: (g: Genre) => void }) {
+/** Pemilih warna aksen: enam titik warna halus. */
+export function AccentSwatches({ value, onPick }: { value: AccentName; onPick: (a: AccentName) => void }) {
   return (
-    <div className="sheet__genres" role="group" aria-label="Genre">
-      {GENRES.map((g) => (
-        <button key={g} type="button" className="wd-swatch" data-genre={g} aria-pressed={value === g} onClick={() => onPick(g)}>
-          <span className="wd-swatch__dot" />{GENRE_LABEL[g]}
+    <div className="sheet__accents" role="group" aria-label="Warna aksen">
+      {ACCENTS.map((a) => (
+        <button key={a} type="button" className="wd-swatch" aria-pressed={value === a} onClick={() => onPick(a)}>
+          <span className="wd-swatch__dot" style={{ '--dot': `var(--fill-${a})` } as React.CSSProperties} />{ACCENT_LABEL[a]}
         </button>
       ))}
     </div>

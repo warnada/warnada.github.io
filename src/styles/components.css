@@ -1,88 +1,75 @@
+/* Komponen Warnada "Cute": permukaan datar, sudut membulat, satu aksen halus. */
 
-/* ---------- Genre theming: set data-genre on <html> or any container ---------- */
-:root, [data-genre="lofi"] { --mesh-1: var(--lofi-mesh-1); --mesh-2: var(--lofi-mesh-2); --mesh-3: var(--lofi-mesh-3); --mesh-4: var(--lofi-mesh-4); --surface-base: var(--lofi-surface); --accent: var(--lofi-accent); }
-[data-genre="pop"] { --mesh-1: var(--pop-mesh-1); --mesh-2: var(--pop-mesh-2); --mesh-3: var(--pop-mesh-3); --mesh-4: var(--pop-mesh-4); --surface-base: var(--pop-surface); --accent: var(--pop-accent); }
-[data-genre="rock"] { --mesh-1: var(--rock-mesh-1); --mesh-2: var(--rock-mesh-2); --mesh-3: var(--rock-mesh-3); --mesh-4: var(--rock-mesh-4); --surface-base: var(--rock-surface); --accent: var(--rock-accent); }
-[data-genre="jazz"] { --mesh-1: var(--jazz-mesh-1); --mesh-2: var(--jazz-mesh-2); --mesh-3: var(--jazz-mesh-3); --mesh-4: var(--jazz-mesh-4); --surface-base: var(--jazz-surface); --accent: var(--jazz-accent); }
-[data-genre="edm"] { --mesh-1: var(--edm-mesh-1); --mesh-2: var(--edm-mesh-2); --mesh-3: var(--edm-mesh-3); --mesh-4: var(--edm-mesh-4); --surface-base: var(--edm-surface); --accent: var(--edm-accent); }
-[data-genre="dangdut"] { --mesh-1: var(--dangdut-mesh-1); --mesh-2: var(--dangdut-mesh-2); --mesh-3: var(--dangdut-mesh-3); --mesh-4: var(--dangdut-mesh-4); --surface-base: var(--dangdut-surface); --accent: var(--dangdut-accent); }
-[data-genre="akustik"] { --mesh-1: var(--akustik-mesh-1); --mesh-2: var(--akustik-mesh-2); --mesh-3: var(--akustik-mesh-3); --mesh-4: var(--akustik-mesh-4); --surface-base: var(--akustik-surface); --accent: var(--akustik-accent); }
-[data-genre="klasik"] { --mesh-1: var(--klasik-mesh-1); --mesh-2: var(--klasik-mesh-2); --mesh-3: var(--klasik-mesh-3); --mesh-4: var(--klasik-mesh-4); --surface-base: var(--klasik-surface); --accent: var(--klasik-accent); }
+/* ---------- Permukaan ---------- */
+.wd-glass { background: var(--glass-1); border: 1.5px solid var(--stroke-glass); border-radius: var(--radius-lg); }
+.wd-glass--raised { background: var(--glass-2); }
+.wd-glass--pop { background: var(--glass-pop); box-shadow: var(--shadow-pop); }
 
-:root { --mesh-opacity: var(--mesh-opacity-dark); }
-[data-theme="light"] { --mesh-opacity: var(--mesh-opacity-light); }
+/* ---------- Sampul datar: nada pastel + motif putih ---------- */
+.wd-art { position: relative; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); background: var(--tone-lilac); flex-shrink: 0; overflow: hidden; }
+.tone-peach { background: var(--tone-peach); } .tone-mint { background: var(--tone-mint); } .tone-lilac { background: var(--tone-lilac); }
+.tone-butter { background: var(--tone-butter); } .tone-sky { background: var(--tone-sky); } .tone-rose { background: var(--tone-rose); }
+.wd-art__motif { width: 60%; height: 60%; pointer-events: none; }
+.wd-art--bare { background: transparent; }
 
-/* ---------- Ground: surface + blurred mesh blobs ---------- */
-.wd-stage { position: relative; overflow: hidden; isolation: isolate; background: var(--surface-base); color: var(--ink); font-family: var(--font-sans); padding: var(--space-5); box-sizing: border-box; }
-.wd-stage::before { content: ""; position: absolute; inset: -20%; z-index: -1; pointer-events: none; opacity: var(--mesh-opacity);
-  background: radial-gradient(circle at 15% 20%, var(--mesh-1) 0, transparent 32%), radial-gradient(circle at 85% 30%, var(--mesh-2) 0, transparent 30%), radial-gradient(circle at 40% 95%, var(--mesh-3) 0, transparent 34%), radial-gradient(circle at 70% 75%, var(--mesh-4) 0, transparent 22%); }
-
-/* ---------- Glass ---------- */
-.wd-glass { background: var(--glass-1); border: 1px solid var(--stroke-glass); border-radius: var(--radius-lg); backdrop-filter: blur(var(--blur-glass)) saturate(140%); -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%); }
-.wd-glass--raised { background: var(--glass-2); backdrop-filter: blur(var(--blur-bar)) saturate(160%); -webkit-backdrop-filter: blur(var(--blur-bar)) saturate(160%); }
-.wd-glass--pop { background: var(--glass-pop); box-shadow: var(--shadow-pop); backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%); }
-
-/* ---------- Mesh art (album art placeholder that follows the genre) ---------- */
-.wd-art { border-radius: var(--radius-sm); background: radial-gradient(at 20% 20%, var(--mesh-2) 0, transparent 55%), radial-gradient(at 85% 25%, var(--mesh-1) 0, transparent 55%), radial-gradient(at 45% 95%, var(--mesh-3) 0, transparent 60%), var(--mesh-4); flex-shrink: 0; }
-
-/* ---------- Buttons ---------- */
-.wd-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 44px; padding: 0 20px; border: 0; border-radius: var(--radius-pill); font: 700 14px/1 var(--font-sans); cursor: pointer; color: var(--ink); background: transparent; }
+/* ---------- Tombol ---------- */
+.wd-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 44px; padding: 0 22px; border: 0; border-radius: var(--radius-pill); font: 800 15px/1 var(--font-sans); cursor: pointer; color: var(--ink); background: transparent; }
 .wd-btn svg { width: 18px; height: 18px; }
 .wd-btn--accent { background: var(--accent); color: var(--accent-ink); }
-.wd-btn--solid { background: var(--solid); color: var(--solid-ink); border-radius: var(--radius-md); }
-.wd-btn--ghost { border: 1px solid var(--stroke-strong); font-weight: 600; }
-.wd-btn--icon { width: 48px; height: 48px; padding: 0; border-radius: var(--radius-md); background: var(--glass-1); border: 1px solid var(--stroke-glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+.wd-btn--solid { background: var(--solid); color: var(--solid-ink); }
+.wd-btn--ghost { border: 1.5px solid var(--stroke-strong); font-weight: 700; }
+.wd-btn--icon { width: 44px; height: 44px; padding: 0; border-radius: 50%; background: var(--glass-1); border: 1.5px solid var(--stroke-glass); }
 .wd-btn--icon svg { width: 22px; height: 22px; }
-.wd-btn:focus-visible, .wd-chip:focus-visible, .wd-switch:focus-visible, .wd-play:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.wd-btn:focus-visible, .wd-chip:focus-visible, .wd-switch:focus-visible, .wd-play:focus-visible, .wd-swatch:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 3px; }
 
-/* ---------- Switch: <button aria-pressed> ---------- */
-.wd-switch { width: 48px; height: 28px; padding: 3px; border: 0; border-radius: var(--radius-pill); background: var(--track); display: inline-flex; cursor: pointer; transition: background .25s; flex-shrink: 0; }
-.wd-switch::after { content: ""; width: 22px; height: 22px; border-radius: 50%; background: #FFFFFF; box-shadow: var(--shadow-knob); transition: transform .25s; }
-.wd-switch[aria-pressed="true"] { background: var(--accent); }
+/* ---------- Saklar: <button aria-pressed> ---------- */
+.wd-switch { width: 50px; height: 30px; padding: 3px; border: 0; border-radius: var(--radius-pill); background: var(--track); display: inline-flex; cursor: pointer; transition: background .25s; flex-shrink: 0; }
+.wd-switch::after { content: ""; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; box-shadow: var(--shadow-knob); transition: transform .25s; }
+.wd-switch[aria-pressed="true"] { background: var(--accent-strong); }
 .wd-switch[aria-pressed="true"]::after { transform: translateX(20px); }
 
 /* ---------- Chip: <button aria-pressed> ---------- */
-.wd-chip { height: 40px; padding: 0 16px; border-radius: var(--radius-pill); border: 1px solid var(--stroke-glass); background: var(--glass-1); color: var(--ink); font: 600 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; }
-.wd-chip[aria-pressed="true"] { background: var(--solid); color: var(--solid-ink); }
+.wd-chip { height: 44px; padding: 0 18px; border-radius: var(--radius-pill); border: 1.5px solid var(--stroke-glass); background: var(--glass-1); color: var(--ink); font: 800 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; }
+.wd-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
-/* ---------- Search ---------- */
-.wd-search { display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 16px; box-sizing: border-box; border-radius: var(--radius-md); background: var(--glass-1); border: 1px solid var(--stroke-glass); color: var(--ink-muted); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-.wd-search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: 500 15px var(--font-sans); color: var(--ink); }
+/* ---------- Kolom cari ---------- */
+.wd-search { display: flex; align-items: center; gap: 10px; height: 54px; padding: 0 18px; border-radius: var(--radius-pill); background: var(--glass-1); border: 1.5px solid var(--stroke-glass); color: var(--ink-muted); }
+.wd-search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: 700 16px var(--font-sans); color: var(--ink); }
 .wd-search input::placeholder { color: var(--ink-muted); opacity: 1; }
-.wd-search:focus-within { border-color: var(--accent); }
+.wd-search:focus-within { border-color: var(--accent-strong); }
 
-/* ---------- Genre swatch ---------- */
-.wd-swatch { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: 12px 4px 10px; border-radius: 18px; border: 1px solid transparent; background: transparent; color: var(--ink); font: 700 13px var(--font-sans); cursor: pointer; }
-.wd-swatch__dot { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(at 25% 25%, var(--mesh-1) 0, transparent 60%), radial-gradient(at 80% 30%, var(--mesh-2) 0, transparent 60%), radial-gradient(at 50% 90%, var(--mesh-3) 0, transparent 65%), var(--mesh-4); }
-.wd-swatch[aria-pressed="true"] { background: var(--glass-2); border-color: var(--stroke-strong); }
-.wd-swatch[aria-pressed="true"] .wd-swatch__dot { box-shadow: 0 0 0 3px var(--surface-base), 0 0 0 5px var(--accent); }
+/* ---------- Pemilih aksen ---------- */
+.wd-swatch { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: 10px 4px 8px; border-radius: var(--radius-md); border: 1.5px solid transparent; background: transparent; color: var(--ink); font: 800 13px var(--font-sans); cursor: pointer; }
+.wd-swatch__dot { width: 44px; height: 44px; border-radius: 50%; background: var(--dot); }
+.wd-swatch[aria-pressed="true"] { background: var(--chip); border-color: var(--stroke-strong); }
+.wd-swatch[aria-pressed="true"] .wd-swatch__dot { box-shadow: 0 0 0 3px var(--surface-base), 0 0 0 5px var(--accent-strong); }
 
 /* ---------- Progress ---------- */
-.wd-progress { position: relative; height: 6px; border-radius: var(--radius-pill); background: var(--track); }
-.wd-progress__fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--accent); }
-.wd-progress__knob { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #FFFFFF; box-shadow: var(--shadow-knob); }
+.wd-progress { position: relative; height: 8px; border-radius: var(--radius-pill); background: var(--track); }
+.wd-progress__fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--accent-strong); }
+.wd-progress__knob { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; background: var(--glass-1); border: 3px solid var(--accent-strong); box-shadow: var(--shadow-knob); }
 
 /* ---------- Transport ---------- */
 .wd-transport { display: flex; align-items: center; gap: var(--space-3); }
-.wd-transport button { width: 44px; height: 44px; border: 0; background: transparent; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.wd-transport button { position: relative; width: 44px; height: 44px; border: 0; background: transparent; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .wd-transport .is-muted { color: var(--ink-muted); }
-.wd-transport .wd-play { width: 56px; height: 56px; border-radius: 50%; background: var(--solid); color: var(--solid-ink); }
+.wd-transport .wd-play { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); }
 
-/* ---------- Song row ---------- */
+/* ---------- Baris lagu ---------- */
 .wd-row { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: 0 var(--space-3); border-radius: var(--radius-md); }
 .wd-row__text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.wd-row__title { font: 700 15px/1.3 var(--font-sans); color: var(--ink); }
-.wd-row__meta { font: 500 13px/1.4 var(--font-sans); color: var(--ink-muted); }
+.wd-row__title { font: 800 15px/1.3 var(--font-sans); color: var(--ink); }
+.wd-row__meta { font: 600 13px/1.4 var(--font-sans); color: var(--ink-muted); }
 
-/* ---------- Lyrics ---------- */
-.wd-lyrics { display: flex; flex-direction: column; gap: var(--space-3); font-family: var(--font-display); letter-spacing: -0.015em; }
-.wd-lyrics p { margin: 0; font-size: 20px; line-height: 1.25; font-weight: 600; color: var(--ink-muted); }
+/* ---------- Lirik ---------- */
+.wd-lyrics { display: flex; flex-direction: column; gap: var(--space-3); font-family: var(--font-display); }
+.wd-lyrics p { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 500; color: var(--ink-muted); }
 .wd-lyrics p.is-sung { color: var(--ink-faint); }
-.wd-lyrics p[aria-current="true"] { font-size: 26px; font-weight: 800; color: var(--ink); }
+.wd-lyrics p[aria-current="true"] { width: fit-content; max-width: 100%; font-size: 24px; font-weight: 600; color: var(--ink); background: linear-gradient(transparent 58%, var(--accent) 58%); border-radius: 4px; }
 
-/* ---------- Bottom nav ---------- */
-.wd-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); height: 80px; padding: 6px 12px 14px; box-sizing: border-box; background: var(--glass-2); border-top: 1px solid var(--stroke-glass); backdrop-filter: blur(var(--blur-bar)) saturate(160%); -webkit-backdrop-filter: blur(var(--blur-bar)) saturate(160%); }
-.wd-nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font: 600 11px var(--font-sans); color: var(--ink-muted); }
-.wd-nav a span { width: 56px; height: 30px; border-radius: var(--radius-pill); display: flex; align-items: center; justify-content: center; }
-.wd-nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
-.wd-nav a[aria-current="page"] span { background: var(--glass-2); }
+/* ---------- Navigasi bawah ---------- */
+.wd-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); height: 84px; padding: 8px 14px 14px; background: var(--glass-2); border-top: 1.5px solid var(--stroke-glass); }
+.wd-nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; font: 800 12px var(--font-sans); color: var(--ink-muted); }
+.wd-nav a span { width: 58px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; }
+.wd-nav a[aria-current="page"] { color: var(--ink); }
+.wd-nav a[aria-current="page"] span { background: var(--accent); color: var(--accent-ink); }

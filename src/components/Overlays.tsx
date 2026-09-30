@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSettings } from '@/store/settings';
 import { dismissToast, useUi } from '@/store/ui';
-import { GenreSwatches, Switch } from './parts';
+import { AccentSwatches, Switch } from './parts';
 import { QueueList } from './Player';
 import { Icon } from './Icon';
 
@@ -30,14 +30,14 @@ export function ThemeSheet() {
   return (
     <div className="sheet-backdrop" onClick={close}>
       <div className="sheet wd-glass wd-glass--pop" role="dialog" aria-modal="true" aria-labelledby="tema-h" onClick={(e) => e.stopPropagation()}>
-        <h2 id="tema-h">Suasana</h2>
-        <GenreSwatches value={s.genre} onPick={(genre) => s.set({ genre, followGenre: false })} />
+        <h2 id="tema-h">Warna aksen</h2>
+        <AccentSwatches value={s.accent} onPick={(accent) => s.set({ accent, followGenre: false })} />
         <div className="seg" role="group" aria-label="Tema">
           <button type="button" aria-pressed={s.theme === 'dark'} onClick={() => s.set({ theme: 'dark' })}><Icon name="moon" />Gelap</button>
           <button type="button" aria-pressed={s.theme === 'light'} onClick={() => s.set({ theme: 'light' })}><Icon name="sun" />Terang</button>
         </div>
         <div className="setting" style={{ padding: 0 }}>
-          <div className="setting__text"><strong id="fg">Ikuti genre lagu</strong><span className="caption">Warna aplikasi berganti mengikuti lagu yang diputar.</span></div>
+          <div className="setting__text"><strong id="fg">Ikuti genre lagu</strong><span className="caption">Aksen berganti halus mengikuti genre lagu yang diputar.</span></div>
           <Switch on={s.followGenre} onChange={(followGenre) => s.set({ followGenre })} labelId="fg" />
         </div>
         <p className="caption kbd-hint">Pintasan: Spasi putar/jeda · ←/→ ±5 detik · N/P lagu berikutnya/sebelumnya · Esc tutup pemutar</p>

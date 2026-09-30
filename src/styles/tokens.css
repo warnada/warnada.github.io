@@ -1,180 +1,77 @@
-/* Dihasilkan dari design system (tokens.json). Nama "Alun" -> "Warnada". */
+/* Token Warnada "Cute": krem hangat + satu aksen halus. Dihasilkan dari prototipe; aksen dipilih lewat [data-accent]. */
 :root {
-  --ink: #F5F3FF;
-  --ink-muted: #B8B2D4;
-  --ink-faint: rgba(245,243,255,0.42);
-  --glass-1: rgba(255,255,255,0.07);
-  --glass-2: rgba(255,255,255,0.12);
-  --glass-pop: rgba(24,20,40,0.72);
-  --stroke-glass: rgba(255,255,255,0.14);
-  --stroke-strong: rgba(255,255,255,0.32);
-  --track: rgba(255,255,255,0.18);
-  --accent-ink: #140E2E;
-  --solid: #F5F3FF;
-  --solid-ink: #140E2E;
-  --on-art: #FFFFFF;
-  --scrim-art: rgba(0,0,0,0.55);
-  --lofi-mesh-1: #6D4AFF;
-  --lofi-mesh-2: #FF6B4A;
-  --lofi-mesh-3: #16B8A6;
-  --lofi-mesh-4: #E0409A;
-  --lofi-surface: #0D0A18;
-  --lofi-accent: #B9A6FF;
-  --pop-mesh-1: #FF4FA3;
-  --pop-mesh-2: #FFB86B;
-  --pop-mesh-3: #B57BFF;
-  --pop-mesh-4: #6EC8FF;
-  --pop-surface: #150A14;
-  --pop-accent: #FF9CCB;
-  --rock-mesh-1: #E5383B;
-  --rock-mesh-2: #FF7B00;
-  --rock-mesh-3: #9D0208;
-  --rock-mesh-4: #4A4A5A;
-  --rock-surface: #120A0A;
-  --rock-accent: #FF8A7A;
-  --jazz-mesh-1: #E0A42B;
-  --jazz-mesh-2: #1F4E8C;
-  --jazz-mesh-3: #7A2940;
-  --jazz-mesh-4: #1E7A75;
-  --jazz-surface: #0E0C0A;
-  --jazz-accent: #F2C46D;
-  --edm-mesh-1: #00E5FF;
-  --edm-mesh-2: #FF00C8;
-  --edm-mesh-3: #7B2FFF;
-  --edm-mesh-4: #B6FF3B;
-  --edm-surface: #05070F;
-  --edm-accent: #6FF3FF;
-  --dangdut-mesh-1: #E6007E;
-  --dangdut-mesh-2: #FFC400;
-  --dangdut-mesh-3: #FF6A00;
-  --dangdut-mesh-4: #8E2DE2;
-  --dangdut-surface: #120812;
-  --dangdut-accent: #FFD54F;
-  --akustik-mesh-1: #8FBF7F;
-  --akustik-mesh-2: #E8C58A;
-  --akustik-mesh-3: #D9794F;
-  --akustik-mesh-4: #5E7D4F;
-  --akustik-surface: #0B100A;
-  --akustik-accent: #B8DDA8;
-  --klasik-mesh-1: #D4AF37;
-  --klasik-mesh-2: #23395B;
-  --klasik-mesh-3: #C98B8B;
-  --klasik-mesh-4: #6B7A8F;
-  --klasik-surface: #0B0D14;
-  --klasik-accent: #E8CF7A;
-  --mesh-opacity: 0.5;
-  color-scheme: dark;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --radius-xs: 10px;
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
-  --radius-xl: 28px;
-  --radius-art: 32px;
-  --radius-pill: 999px;
-  --shadow-art: 0 24px 50px rgba(0,0,0,0.3);
-  --shadow-float: 0 12px 30px rgba(0,0,0,0.18);
-  --shadow-pop: 0 30px 80px rgba(0,0,0,0.35);
-  --shadow-knob: 0 2px 6px rgba(0,0,0,0.25);
-  --blur-glass: 28px;
-  --blur-bar: 32px;
-  --blur-mesh: 90px;
-  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", system-ui, sans-serif;
-  --font-sans: "Manrope Variable", "Manrope", system-ui, sans-serif;
-}
-:root[data-theme="light"] {
-  --ink: #16122A;
-  --ink-muted: #4E4868;
-  --ink-faint: rgba(22,18,42,0.45);
-  --glass-1: rgba(255,255,255,0.5);
-  --glass-2: rgba(255,255,255,0.72);
-  --glass-pop: rgba(255,255,255,0.82);
-  --stroke-glass: rgba(255,255,255,0.85);
-  --stroke-strong: rgba(22,18,42,0.22);
-  --track: rgba(22,18,42,0.12);
-  --accent-ink: #FFFFFF;
-  --solid: #16122A;
+  --surface-base: #FFF9F3;
+  --ink: #4A3F4B;
+  --ink-muted: #74687A;
+  --ink-faint: rgba(74,63,75,0.4);
+  --glass-1: #FFFFFF;
+  --glass-2: #FFFFFF;
+  --glass-pop: #FFFFFF;
+  --stroke-glass: #F0E4D9;
+  --stroke-strong: #E2D3C6;
+  --track: #EFE3D8;
+  --chip: #FBEFE6;
+  --solid: #4A3F4B;
   --solid-ink: #FFFFFF;
   --on-art: #FFFFFF;
-  --scrim-art: rgba(0,0,0,0.55);
-  --lofi-mesh-1: #6D4AFF;
-  --lofi-mesh-2: #FF6B4A;
-  --lofi-mesh-3: #16B8A6;
-  --lofi-mesh-4: #E0409A;
-  --lofi-surface: #F4F1FA;
-  --lofi-accent: #5B3DF0;
-  --pop-mesh-1: #FF4FA3;
-  --pop-mesh-2: #FFB86B;
-  --pop-mesh-3: #B57BFF;
-  --pop-mesh-4: #6EC8FF;
-  --pop-surface: #FCF1F6;
-  --pop-accent: #C2185B;
-  --rock-mesh-1: #E5383B;
-  --rock-mesh-2: #FF7B00;
-  --rock-mesh-3: #9D0208;
-  --rock-mesh-4: #4A4A5A;
-  --rock-surface: #F7F1EF;
-  --rock-accent: #B3261E;
-  --jazz-mesh-1: #E0A42B;
-  --jazz-mesh-2: #1F4E8C;
-  --jazz-mesh-3: #7A2940;
-  --jazz-mesh-4: #1E7A75;
-  --jazz-surface: #F8F4EC;
-  --jazz-accent: #8A5A00;
-  --edm-mesh-1: #00E5FF;
-  --edm-mesh-2: #FF00C8;
-  --edm-mesh-3: #7B2FFF;
-  --edm-mesh-4: #B6FF3B;
-  --edm-surface: #EEF6FA;
-  --edm-accent: #0072AD;
-  --dangdut-mesh-1: #E6007E;
-  --dangdut-mesh-2: #FFC400;
-  --dangdut-mesh-3: #FF6A00;
-  --dangdut-mesh-4: #8E2DE2;
-  --dangdut-surface: #FBF1F6;
-  --dangdut-accent: #A0005A;
-  --akustik-mesh-1: #8FBF7F;
-  --akustik-mesh-2: #E8C58A;
-  --akustik-mesh-3: #D9794F;
-  --akustik-mesh-4: #5E7D4F;
-  --akustik-surface: #F2F5EE;
-  --akustik-accent: #3E6B35;
-  --klasik-mesh-1: #D4AF37;
-  --klasik-mesh-2: #23395B;
-  --klasik-mesh-3: #C98B8B;
-  --klasik-mesh-4: #6B7A8F;
-  --klasik-surface: #F5F3EE;
-  --klasik-accent: #6B4E00;
-  --mesh-opacity: 0.42;
+  --scrim-art: rgba(0,0,0,0.4);
+  --tone-peach: #FFD8C4;
+  --tone-mint: #CBEBD9;
+  --tone-lilac: #DDD5F6;
+  --tone-butter: #FFF0B5;
+  --tone-sky: #CDE5F7;
+  --tone-rose: #FFD0DB;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
+  --radius-xs: 12px; --radius-sm: 14px; --radius-md: 18px; --radius-lg: 24px; --radius-xl: 30px; --radius-art: 34px; --radius-pill: 999px;
+  --shadow-art: 0 10px 26px rgba(74,63,75,0.12);
+  --shadow-float: 0 6px 18px rgba(74,63,75,0.10);
+  --shadow-pop: 0 14px 36px rgba(74,63,75,0.18);
+  --shadow-knob: 0 1px 4px rgba(74,63,75,0.25);
+  --font-display: "Fredoka Variable", "Fredoka", system-ui, sans-serif;
+  --font-sans: "Nunito Variable", "Nunito", system-ui, sans-serif;
   color-scheme: light;
 }
-:root[data-theme="dark"][data-genre="lofi"], :root[data-theme="dark"] [data-genre="lofi"] { --surface-base: #0D0A18; --accent: #B9A6FF; }
-:root[data-theme="dark"][data-genre="pop"], :root[data-theme="dark"] [data-genre="pop"] { --surface-base: #150A14; --accent: #FF9CCB; }
-:root[data-theme="dark"][data-genre="rock"], :root[data-theme="dark"] [data-genre="rock"] { --surface-base: #120A0A; --accent: #FF8A7A; }
-:root[data-theme="dark"][data-genre="jazz"], :root[data-theme="dark"] [data-genre="jazz"] { --surface-base: #0E0C0A; --accent: #F2C46D; }
-:root[data-theme="dark"][data-genre="edm"], :root[data-theme="dark"] [data-genre="edm"] { --surface-base: #05070F; --accent: #6FF3FF; }
-:root[data-theme="dark"][data-genre="dangdut"], :root[data-theme="dark"] [data-genre="dangdut"] { --surface-base: #120812; --accent: #FFD54F; }
-:root[data-theme="dark"][data-genre="akustik"], :root[data-theme="dark"] [data-genre="akustik"] { --surface-base: #0B100A; --accent: #B8DDA8; }
-:root[data-theme="dark"][data-genre="klasik"], :root[data-theme="dark"] [data-genre="klasik"] { --surface-base: #0B0D14; --accent: #E8CF7A; }
-:root[data-theme="light"][data-genre="lofi"], :root[data-theme="light"] [data-genre="lofi"] { --surface-base: #F4F1FA; --accent: #5B3DF0; }
-:root[data-theme="light"][data-genre="pop"], :root[data-theme="light"] [data-genre="pop"] { --surface-base: #FCF1F6; --accent: #C2185B; }
-:root[data-theme="light"][data-genre="rock"], :root[data-theme="light"] [data-genre="rock"] { --surface-base: #F7F1EF; --accent: #B3261E; }
-:root[data-theme="light"][data-genre="jazz"], :root[data-theme="light"] [data-genre="jazz"] { --surface-base: #F8F4EC; --accent: #8A5A00; }
-:root[data-theme="light"][data-genre="edm"], :root[data-theme="light"] [data-genre="edm"] { --surface-base: #EEF6FA; --accent: #0072AD; }
-:root[data-theme="light"][data-genre="dangdut"], :root[data-theme="light"] [data-genre="dangdut"] { --surface-base: #FBF1F6; --accent: #A0005A; }
-:root[data-theme="light"][data-genre="akustik"], :root[data-theme="light"] [data-genre="akustik"] { --surface-base: #F2F5EE; --accent: #3E6B35; }
-:root[data-theme="light"][data-genre="klasik"], :root[data-theme="light"] [data-genre="klasik"] { --surface-base: #F5F3EE; --accent: #6B4E00; }
+:root[data-theme="dark"] {
+  --surface-base: #231F2C;
+  --ink: #F4EEF6;
+  --ink-muted: #BBB1C4;
+  --ink-faint: rgba(244,238,246,0.42);
+  --glass-1: #2E2939;
+  --glass-2: #2E2939;
+  --glass-pop: #2E2939;
+  --stroke-glass: #3D3749;
+  --stroke-strong: #52495F;
+  --track: #3D3749;
+  --chip: #332E40;
+  --solid: #F4EEF6;
+  --solid-ink: #231F2C;
+  --shadow-art: 0 10px 26px rgba(0,0,0,0.35);
+  --shadow-float: 0 6px 18px rgba(0,0,0,0.30);
+  --shadow-pop: 0 14px 36px rgba(0,0,0,0.45);
+  --shadow-knob: 0 1px 4px rgba(0,0,0,0.5);
+  color-scheme: dark;
+  --tone-peach: #7A5A4E;
+  --tone-mint: #4B6B5E;
+  --tone-lilac: #5F5980;
+  --tone-butter: #7A6C41;
+  --tone-sky: #48647E;
+  --tone-rose: #7F4E5E;
+}
 
-/* Daftarkan warna dinamis agar pergantian genre/tema berpindah halus (crossfade), bukan melompat. */
-@property --mesh-1 { syntax: '<color>'; inherits: true; initial-value: #6D4AFF; }
-@property --mesh-2 { syntax: '<color>'; inherits: true; initial-value: #FF6B4A; }
-@property --mesh-3 { syntax: '<color>'; inherits: true; initial-value: #16B8A6; }
-@property --mesh-4 { syntax: '<color>'; inherits: true; initial-value: #E0409A; }
-@property --surface-base { syntax: '<color>'; inherits: true; initial-value: #0D0A18; }
-@property --accent { syntax: '<color>'; inherits: true; initial-value: #B9A6FF; }
+/* Aksen: fill = tombol/chip/progres; ink = teks di atas fill; strong = ikon/teks kecil di atas permukaan */
+:root[data-accent="lilac"], :root:not([data-accent]) { --accent: #D8CFF2; --accent-ink: #2F2748; --accent-strong: #6C57B5; }
+:root[data-accent="sage"] { --accent: #BFE0CD; --accent-ink: #264234; --accent-strong: #3F7A5F; }
+:root[data-accent="peach"] { --accent: #FFD1B8; --accent-ink: #4A2C1B; --accent-strong: #A8562A; }
+:root[data-accent="sky"] { --accent: #C6E1F5; --accent-ink: #1F3A52; --accent-strong: #3A78A8; }
+:root[data-accent="rose"] { --accent: #FBC8D3; --accent-ink: #4A2A35; --accent-strong: #C9455E; }
+:root[data-accent="butter"] { --accent: #F6E3A3; --accent-ink: #4A3A12; --accent-strong: #8A6710; }
+:root[data-theme="dark"][data-accent="lilac"], :root[data-theme="dark"]:not([data-accent]) { --accent: #BFB2EA; --accent-ink: #251E3D; --accent-strong: #BFB2EA; }
+:root[data-theme="dark"][data-accent="sage"] { --accent: #9BCDB3; --accent-ink: #16302A; --accent-strong: #9BCDB3; }
+:root[data-theme="dark"][data-accent="peach"] { --accent: #F4B996; --accent-ink: #3D2214; --accent-strong: #F4B996; }
+:root[data-theme="dark"][data-accent="sky"] { --accent: #9FCDEB; --accent-ink: #142E44; --accent-strong: #9FCDEB; }
+:root[data-theme="dark"][data-accent="rose"] { --accent: #F0A5B6; --accent-ink: #3A1F29; --accent-strong: #F0A5B6; }
+:root[data-theme="dark"][data-accent="butter"] { --accent: #EAD68A; --accent-ink: #3A2E0C; --accent-strong: #EAD68A; }
+
+/* Warna titik pada pemilih aksen */
+:root { --fill-lilac: #D8CFF2; --fill-sage: #BFE0CD; --fill-peach: #FFD1B8; --fill-sky: #C6E1F5; --fill-rose: #FBC8D3; --fill-butter: #F6E3A3; }
+:root[data-theme="dark"] { --fill-lilac: #BFB2EA; --fill-sage: #9BCDB3; --fill-peach: #F4B996; --fill-sky: #9FCDEB; --fill-rose: #F0A5B6; --fill-butter: #EAD68A; }
