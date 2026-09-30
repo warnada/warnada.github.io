@@ -19,7 +19,7 @@ describe('parseCatalog', () => {
 });
 
 describe('sanitizeSettings', () => {
-  const def = { accent: 'lilac', theme: 'dark', followGenre: true, offlineMode: false, bannerDismissed: false } as const;
+  const def = { accent: 'lilac', theme: 'dark', followGenre: true, offlineMode: false, bannerDismissed: false, blurTransition: true } as const;
   it('membuang nilai tak valid dan mempertahankan yang valid', () => {
     expect(sanitizeSettings({ accent: '"><script>', theme: 'neon', followGenre: 'ya', offlineMode: true }, def)).toEqual({ ...def, offlineMode: true });
     expect(sanitizeSettings({ accent: 'sage', theme: 'light' }, def)).toEqual({ ...def, accent: 'sage', theme: 'light' });
@@ -28,7 +28,7 @@ describe('sanitizeSettings', () => {
 });
 
 describe('sanitizeSettings: data lama', () => {
-  const def = { accent: 'lilac', theme: 'dark', followGenre: true, offlineMode: false, bannerDismissed: false } as const;
+  const def = { accent: 'lilac', theme: 'dark', followGenre: true, offlineMode: false, bannerDismissed: false, blurTransition: true } as const;
   it('mengabaikan field genre lama tanpa merusak pengaturan lain', () => {
     expect(sanitizeSettings({ genre: 'jazz', theme: 'light', offlineMode: true }, def)).toEqual({ ...def, theme: 'light', offlineMode: true });
   });

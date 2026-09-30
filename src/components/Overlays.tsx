@@ -40,6 +40,10 @@ export function ThemeSheet() {
           <div className="setting__text"><strong id="fg">Ikuti genre lagu</strong><span className="caption">Aksen berganti halus mengikuti genre lagu yang diputar.</span></div>
           <Switch on={s.followGenre} onChange={(followGenre) => s.set({ followGenre })} labelId="fg" />
         </div>
+        <div className="setting" style={{ padding: 0 }}>
+          <div className="setting__text"><strong id="bt">Transisi blur</strong><span className="caption">Efek buram saat geser antarmenu. Matikan bila terasa berat di perangkatmu.</span></div>
+          <Switch on={s.blurTransition} onChange={(blurTransition) => s.set({ blurTransition })} labelId="bt" />
+        </div>
         <p className="caption kbd-hint">Pintasan: Spasi putar/jeda · ←/→ ±5 detik · N/P lagu berikutnya/sebelumnya · Esc tutup pemutar</p>
         <button type="button" className="wd-btn wd-btn--ghost" onClick={close}>Selesai</button>
       </div>

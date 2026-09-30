@@ -37,7 +37,7 @@ export function parseCatalog(json: unknown): Track[] {
   });
 }
 
-export interface Settings { accent: AccentName; theme: ThemeMode; followGenre: boolean; offlineMode: boolean; bannerDismissed: boolean }
+export interface Settings { accent: AccentName; theme: ThemeMode; followGenre: boolean; offlineMode: boolean; bannerDismissed: boolean; blurTransition: boolean }
 
 /** Data dari localStorage bisa rusak/diubah; ambil hanya nilai valid, sisanya pakai bawaan. */
 export function sanitizeSettings(raw: unknown, fallback: Settings): Settings {
@@ -46,6 +46,6 @@ export function sanitizeSettings(raw: unknown, fallback: Settings): Settings {
   return {
     accent: typeof raw.accent === 'string' && (ACCENTS as readonly string[]).includes(raw.accent) ? (raw.accent as AccentName) : fallback.accent,
     theme: raw.theme === 'light' || raw.theme === 'dark' ? raw.theme : fallback.theme,
-    followGenre: bool('followGenre'), offlineMode: bool('offlineMode'), bannerDismissed: bool('bannerDismissed')
+    followGenre: bool('followGenre'), offlineMode: bool('offlineMode'), bannerDismissed: bool('bannerDismissed'), blurTransition: bool('blurTransition')
   };
 }
