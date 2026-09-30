@@ -642,13 +642,9 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
    hanya transform + opacity, sehingga tetap di compositor.
    ===================================================================== */
 /* antarmenu: geser kiri/kanan (scroll vertikal tetap milik browser) */
-.shell__main{touch-action:pan-y}
+.shell__main{touch-action:pan-y;position:relative}
 .shell__main[data-swiping]>.page{transform:translate3d(var(--tx,0px),0,0);opacity:var(--to,1);will-change:transform,opacity}
 .shell__main[data-swiping][data-settle]>.page{transition:transform .19s cubic-bezier(.3,.7,.3,1),opacity .19s linear}
-.shell__main[data-enter="next"]>.page{animation:tab-in-next .32s cubic-bezier(.2,.8,.2,1) both}
-.shell__main[data-enter="prev"]>.page{animation:tab-in-prev .32s cubic-bezier(.2,.8,.2,1) both}
-@keyframes tab-in-next{from{transform:translate3d(32%,0,0);opacity:0}}
-@keyframes tab-in-prev{from{transform:translate3d(-32%,0,0);opacity:0}}
 
 /* pemutar: geser atas = berikutnya, bawah = sebelumnya */
 .lw{touch-action:none}
