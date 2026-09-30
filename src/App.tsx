@@ -99,47 +99,51 @@ function TopBar({ scrolled }: { scrolled: boolean }) {
 const TAB_SWIPE_BLOCKED = '.hscroll, .chips, .sky__slider, .full__lyrics, .sheet, .toast, input, textarea, select, [role="slider"]';
 const TAB_SLIDE_MS = 300;
 const TAB_EASE = 'cubic-bezier(.22,.8,.26,1)';
-const TAB_SAFETY_MS = 1200;
+const TAB_SAFETY_MS = 1500;
 
 /** Manipulasi DOM untuk animasi geser antarmenu. Sengaja di luar komponen: ini gaya sementara per-frame, bukan state React. */
 const tabDom = {
-  drag(el: HTMLElement, x: number, opacity: number) {
-    el.dataset.swiping = 'true'; delete el.dataset.settle;
-    el.style.setProperty('--tx', `${x.toFixed(1)}px`); el.style.setProperty('--to', opacity.toFixed(2));
+  /** data-busy menjeda animasi dekoratif (hujan, awan) selama geser supaya main thread dan compositor longgar. */
+  drag(el: HTMLElement, x: number) {
+    el.dataset.busy = 'true'; el.dataset.swiping = 'true'; delete el.dataset.settle;
+    el.style.setProperty('--tx', `${x.toFixed(1)}px`);
   },
-  settle(el: HTMLElement, x: number, opacity: number) {
+  settle(el: HTMLElement) {
     el.dataset.settle = 'true';
-    el.style.setProperty('--tx', `${x.toFixed(1)}px`); el.style.setProperty('--to', opacity.toFixed(2));
+    el.style.setProperty('--tx', '0px');
   },
   clear(el: HTMLElement) {
     delete el.dataset.swiping; delete el.dataset.settle;
-    el.style.removeProperty('--tx'); el.style.removeProperty('--to');
+    el.style.removeProperty('--tx');
   },
+  idle(el: HTMLElement) { tabDom.clear(el); delete el.dataset.busy; },
   page: (el: HTMLElement) => el.querySelector<HTMLElement>(':scope > .page:not(.page--ghost)'),
-  /** Salinan statis halaman lama di posisi yang sama: tetap terlihat dan ikut meluncur keluar sementara halaman baru dirender. */
+  /** Salinan statis halaman lama di posisi yang sama: tetap terlihat dan meluncur keluar sementara halaman baru dirender. */
   ghost(el: HTMLElement): HTMLElement | null {
     const page = tabDom.page(el);
     if (!page) return null;
     const g = page.cloneNode(true) as HTMLElement;
     g.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
     g.removeAttribute('id');
-    g.setAttribute('aria-hidden', 'true'); g.inert = true; g.className += ' page--ghost';
-    Object.assign(g.style, { position: 'absolute', left: '0', top: `${page.offsetTop}px`, width: `${page.offsetWidth}px`, margin: '0', pointerEvents: 'none', transform: getComputedStyle(page).transform, opacity: getComputedStyle(page).opacity });
+    g.setAttribute('aria-hidden', 'true'); g.inert = true; g.classList.add('page--ghost');
+    Object.assign(g.style, { position: 'absolute', left: '0', top: `${page.offsetTop}px`, width: `${page.offsetWidth}px`, margin: '0', pointerEvents: 'none', transform: getComputedStyle(page).transform });
     el.appendChild(g);
     return g;
   },
-  /** Halaman lama (ghost) keluar dan halaman baru masuk bersamaan, keduanya transform di compositor. */
-  slide(el: HTMLElement, ghost: HTMLElement | null, dir: Dir, fromX: number, done: () => void) {
-    const w = el.clientWidth, sign = dir === 'next' ? 1 : -1;
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const opts: KeyframeAnimationOptions = { duration: reduce ? 1 : TAB_SLIDE_MS, easing: TAB_EASE, fill: 'both' };
-    const fresh = tabDom.page(el);
-    const anims: Animation[] = [];
-    if (ghost) anims.push(ghost.animate([{ transform: `translate3d(${fromX}px,0,0)`, opacity: 1 }, { transform: `translate3d(${-sign * w}px,0,0)`, opacity: 0.35 }], opts));
-    if (fresh) anims.push(fresh.animate([{ transform: `translate3d(${sign * w + fromX}px,0,0)`, opacity: 0.6 }, { transform: 'translate3d(0,0,0)', opacity: 1 }], opts));
-    const finish = () => { ghost?.remove(); anims.forEach((a) => a.cancel()); done(); };
-    if (!anims.length) finish();
-    else void Promise.all(anims.map((a) => a.finished.catch(() => undefined))).then(finish);
+  timing(): KeyframeAnimationOptions {
+    return { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : TAB_SLIDE_MS, easing: TAB_EASE, fill: 'both' };
+  },
+  /** Halaman lama keluar SEGERA (compositor, tidak menunggu render halaman baru). */
+  out(ghost: HTMLElement, dir: Dir, fromX: number, width: number): Animation {
+    const sign = dir === 'next' ? 1 : -1;
+    return ghost.animate([{ transform: `translate3d(${fromX}px,0,0)` }, { transform: `translate3d(${-sign * width}px,0,0)` }], tabDom.timing());
+  },
+  /** Halaman baru masuk, diselaraskan dengan waktu berjalan animasi keluar (jam dinding) sehingga keduanya tetap bersebelahan. */
+  enter(page: HTMLElement, elapsedMs: number, dir: Dir, fromX: number, width: number): Animation {
+    const sign = dir === 'next' ? 1 : -1;
+    const a = page.animate([{ transform: `translate3d(${sign * width + fromX}px,0,0)` }, { transform: 'translate3d(0,0,0)' }], tabDom.timing());
+    a.currentTime = elapsedMs;
+    return a;
   }
 };
 const timerIds = new Set<number>();
@@ -149,12 +153,13 @@ function schedule(fn: () => void, ms: number) {
 }
 function cancelScheduled() { timerIds.forEach(clearTimeout); timerIds.clear(); }
 
-interface PendingSlide { dir: Dir; fromX: number; ghost: HTMLElement | null }
+interface PendingSlide { dir: Dir; fromX: number; ghost: HTMLElement | null; out: Animation | null; width: number; startedAt: number }
 
 /**
  * Geser kiri/kanan berpindah antarmenu (Beranda, Cari, Pustaka, Unduhan). Halaman mengikuti jari lewat CSS variable
- * (tanpa render ulang React). Saat dilepas, halaman lama disalin (ghost) dan meluncur keluar bersamaan dengan halaman baru
- * yang masuk (WAAPI, transform/opacity di compositor), jadi tidak ada jeda kosong walau halaman baru butuh waktu dirender.
+ * (tanpa render ulang React). Saat dilepas, halaman lama disalin (ghost) dan langsung meluncur keluar di compositor,
+ * tanpa menunggu halaman baru dirender; halaman baru masuk begitu terpasang, disinkronkan ke garis waktu yang sama.
+ * Animasi dekoratif dijeda selama geser agar mulus di perangkat yang lebih lemah.
  */
 function useTabSwipe(getMain: () => HTMLElement | null) {
   const navigate = useNavigate();
@@ -163,13 +168,21 @@ function useTabSwipe(getMain: () => HTMLElement | null) {
   const pending = useRef<PendingSlide | null>(null);
   useEffect(() => cancelScheduled, []);
 
-  // halaman baru sudah terpasang (sebelum paint): mulai animasi geser
+  const finish = (el: HTMLElement, ghost: HTMLElement | null, anims: Animation[]) => {
+    ghost?.remove(); anims.forEach((a) => a.cancel());
+    tabDom.idle(el); busy.current = false;
+  };
+
+  // halaman baru sudah terpasang (sebelum paint): masukkan, selaras dengan animasi keluar
   useLayoutEffect(() => {
     const el = getMain();
     const p = pending.current;
     if (!el || !p) return;
     pending.current = null;
-    tabDom.slide(el, p.ghost, p.dir, p.fromX, () => { busy.current = false; });
+    const fresh = tabDom.page(el);
+    const anims = [p.out, fresh ? tabDom.enter(fresh, performance.now() - p.startedAt, p.dir, p.fromX, p.width) : null].filter((a): a is Animation => !!a);
+    if (!anims.length) { finish(el, p.ghost, []); return; }
+    void Promise.all(anims.map((a) => a.finished.catch(() => undefined))).then(() => finish(el, p.ghost, anims));
   }, [pathname, getMain]);
 
   return useAxisDrag({
@@ -180,8 +193,7 @@ function useTabSwipe(getMain: () => HTMLElement | null) {
       const el = getMain();
       if (!el) return;
       const has = neighborTab(pathname, d < 0 ? 'next' : 'prev') !== null;
-      const x = has ? d : d * 0.25; // di ujung menu: tertahan seperti karet
-      tabDom.drag(el, x, has ? Math.max(0.6, 1 - Math.abs(x) / (el.clientWidth * 2)) : 1);
+      tabDom.drag(el, has ? d : d * 0.25); // di ujung menu: tertahan seperti karet
     },
     onEnd: (d, committed) => {
       const el = getMain();
@@ -189,18 +201,21 @@ function useTabSwipe(getMain: () => HTMLElement | null) {
       const dir: Dir = d < 0 ? 'next' : 'prev';
       const target = neighborTab(pathname, dir);
       if (!committed || !target) { // kembali ke posisi
-        tabDom.settle(el, 0, 1);
-        schedule(() => tabDom.clear(el), 260);
+        tabDom.settle(el);
+        schedule(() => tabDom.idle(el), 260);
         return;
       }
       busy.current = true;
+      const width = el.clientWidth;
       const fromX = parseFloat(el.style.getPropertyValue('--tx')) || 0;
       const ghost = tabDom.ghost(el);
       tabDom.clear(el);
-      pending.current = { dir, fromX, ghost };
+      const out = ghost ? tabDom.out(ghost, dir, fromX, width) : null;
+      pending.current = { dir, fromX, ghost, out, width, startedAt: performance.now() };
       navigate(target, { state: { swipe: true } });
       schedule(() => { // pengaman: navigasi tidak terjadi
-        if (pending.current) { pending.current.ghost?.remove(); pending.current = null; busy.current = false; }
+        const p = pending.current;
+        if (p) { pending.current = null; finish(el, p.ghost, p.out ? [p.out] : []); }
       }, TAB_SAFETY_MS);
     }
   });
