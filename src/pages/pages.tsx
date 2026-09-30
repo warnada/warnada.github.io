@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { GENRES, GENRE_LABEL, type Genre, type Track } from '@/lib/types';
 import { formatSize } from '@/lib/format';
 import { loadLyrics } from '@/lib/catalog';
@@ -212,6 +212,7 @@ export function Downloads() {
 export function Search() {
   const { tracks, status } = useTracks();
   const [params, setParams] = useSearchParams();
+  const viaSwipe = (useLocation().state as { swipe?: boolean } | null)?.swipe === true;
   const genre = readGenre(params.get('genre'));
   const [q, setQ] = useState(params.get('q') ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -270,8 +271,8 @@ export function Search() {
   const pickRecent = (t: string) => { setQ(t); inputRef.current?.focus(); };
   const counts = useMemo(() => Object.fromEntries(GENRES.map((g) => [g, tracks.filter((t) => t.genre === g).length])) as Record<Genre, number>, [tracks]);
   useEffect(() => { // dibuka dari menu = langsung siap mengetik; tujuan lain (genre/kata di URL) tidak dipaksa
-    if (shouldAutofocus(new URLSearchParams(window.location.search))) inputRef.current?.focus();
-  }, []);
+    if (!viaSwipe && shouldAutofocus(new URLSearchParams(window.location.search))) inputRef.current?.focus();
+  }, [viaSwipe]);
   useEffect(() => { // klik menu Cari saat sudah di halaman ini
     const focus = () => inputRef.current?.focus();
     addEventListener(FOCUS_SEARCH_EVENT, focus);

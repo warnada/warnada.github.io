@@ -636,3 +636,27 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
 @media (min-width:700px),(max-height:520px) and (orientation:landscape){
   .lw__top .full__actions .icon-btn{background:var(--glass-1);box-shadow:var(--shadow-soft)}
 }
+
+/* =====================================================================
+   Gestur geser. Konten mengikuti jari lewat CSS variable (--tx / --sw),
+   hanya transform + opacity, sehingga tetap di compositor.
+   ===================================================================== */
+/* antarmenu: geser kiri/kanan (scroll vertikal tetap milik browser) */
+.shell__main{touch-action:pan-y}
+.shell__main[data-swiping]>.page{transform:translate3d(var(--tx,0px),0,0);opacity:var(--to,1);will-change:transform,opacity}
+.shell__main[data-swiping][data-settle]>.page{transition:transform .19s cubic-bezier(.3,.7,.3,1),opacity .19s linear}
+.shell__main[data-enter="next"]>.page{animation:tab-in-next .32s cubic-bezier(.2,.8,.2,1) both}
+.shell__main[data-enter="prev"]>.page{animation:tab-in-prev .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes tab-in-next{from{transform:translate3d(32%,0,0);opacity:0}}
+@keyframes tab-in-prev{from{transform:translate3d(-32%,0,0);opacity:0}}
+
+/* pemutar: geser atas = berikutnya, bawah = sebelumnya */
+.lw{touch-action:none}
+.lw__sheet{overflow:hidden;touch-action:none}
+.lw .full__lyrics{touch-action:pan-y}
+.lw :is(.lw__clouds,.lw__sheet .full__meta,.lw__sheet .nextup){transform:translate3d(0,var(--sw,0px),0);opacity:var(--so,1);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s}
+.lw[data-dragging] :is(.lw__clouds,.lw__sheet .full__meta,.lw__sheet .nextup){transition:none;will-change:transform,opacity}
+@keyframes lw-in-up{from{transform:translate3d(0,40px,0);opacity:0}}
+@keyframes lw-in-down{from{transform:translate3d(0,-40px,0);opacity:0}}
+.lw[data-swap="up"] :is(.lw__clouds,.lw__sheet .full__meta,.lw__sheet .nextup){animation:lw-in-up .4s cubic-bezier(.2,.8,.2,1)}
+.lw[data-swap="down"] :is(.lw__clouds,.lw__sheet .full__meta,.lw__sheet .nextup){animation:lw-in-down .4s cubic-bezier(.2,.8,.2,1)}

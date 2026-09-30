@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Link, Navigate, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSettings } from '@/store/settings';
 import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
@@ -14,6 +14,8 @@ import { QueueSheet, ThemeSheet, Toast, useInstall } from '@/components/Overlays
 import { Downloads, Home, Library, Search } from '@/pages/pages';
 import { readGenre } from '@/lib/search';
 import { resolveAccent } from '@/lib/style';
+import { neighborTab, tabIndex, type Dir } from '@/lib/tabs';
+import { useAxisDrag } from '@/lib/useAxisDrag';
 
 const PlayerPage = lazy(() => import('@/pages/PlayerPage'));
 
@@ -93,17 +95,99 @@ function TopBar({ scrolled }: { scrolled: boolean }) {
   );
 }
 
+/** Area yang punya geser/gulir sendiri atau kontrol geser: geser antarmenu tidak dimulai dari sini. */
+const TAB_SWIPE_BLOCKED = '.hscroll, .chips, .sky__slider, .full__lyrics, .sheet, .toast, input, textarea, select, [role="slider"]';
+const TAB_OUT_MS = 190;
+const TAB_ENTER_MS = 320;
+
+/** Manipulasi DOM untuk animasi geser antarmenu. Sengaja di luar komponen: ini gaya sementara per-frame, bukan state React. */
+const tabDom = {
+  drag(el: HTMLElement, x: number, opacity: number) {
+    el.dataset.swiping = 'true'; delete el.dataset.settle;
+    el.style.setProperty('--tx', `${x.toFixed(1)}px`); el.style.setProperty('--to', opacity.toFixed(2));
+  },
+  settle(el: HTMLElement, x: number, opacity: number) {
+    el.dataset.settle = 'true';
+    el.style.setProperty('--tx', `${x.toFixed(1)}px`); el.style.setProperty('--to', opacity.toFixed(2));
+  },
+  clear(el: HTMLElement) {
+    delete el.dataset.swiping; delete el.dataset.settle;
+    el.style.removeProperty('--tx'); el.style.removeProperty('--to');
+  },
+  enter(el: HTMLElement, dir: Dir) { el.dataset.enter = dir; },
+  leave(el: HTMLElement) { delete el.dataset.enter; }
+};
+const timerIds = new Set<number>();
+function schedule(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { timerIds.delete(id); fn(); }, ms);
+  timerIds.add(id);
+}
+function cancelScheduled() { timerIds.forEach(clearTimeout); timerIds.clear(); }
+
+/**
+ * Geser kiri/kanan berpindah antarmenu (Beranda, Cari, Pustaka, Unduhan). Halaman mengikuti jari lewat CSS variable
+ * (tanpa render ulang React), keluar ke sisi geser, lalu halaman baru masuk dari sisi lawan.
+ */
+function useTabSwipe(getMain: () => HTMLElement | null) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const busy = useRef(false);
+  const pending = useRef<Dir | null>(null);
+  useEffect(() => cancelScheduled, []);
+
+  // halaman baru sudah terpasang (sebelum paint): buang keadaan seret dan mainkan animasi masuk
+  useLayoutEffect(() => {
+    const el = getMain();
+    const dir = pending.current;
+    if (!el || !dir) return;
+    pending.current = null;
+    tabDom.clear(el);
+    tabDom.enter(el, dir);
+    schedule(() => { tabDom.leave(el); busy.current = false; }, TAB_ENTER_MS);
+  }, [pathname, getMain]);
+
+  return useAxisDrag({
+    axis: 'x',
+    accepts: (t) => !busy.current && tabIndex(pathname) >= 0 && !t.closest(TAB_SWIPE_BLOCKED) && !useUi.getState().queueSheet && !useUi.getState().themeSheet,
+    size: () => getMain()?.clientWidth ?? 360,
+    onDrag: (d) => {
+      const el = getMain();
+      if (!el) return;
+      const has = neighborTab(pathname, d < 0 ? 'next' : 'prev') !== null;
+      const x = has ? d : d * 0.25; // di ujung menu: tertahan seperti karet
+      tabDom.drag(el, x, has ? Math.max(0.4, 1 - Math.abs(x) / (el.clientWidth * 1.2)) : 1);
+    },
+    onEnd: (d, committed) => {
+      const el = getMain();
+      if (!el) return;
+      const dir: Dir = d < 0 ? 'next' : 'prev';
+      const target = neighborTab(pathname, dir);
+      if (!committed || !target) { // kembali ke posisi
+        tabDom.settle(el, 0, 1);
+        schedule(() => { if (!pending.current) tabDom.clear(el); }, TAB_OUT_MS + 60);
+        return;
+      }
+      busy.current = true;
+      tabDom.settle(el, (dir === 'next' ? -1 : 1) * el.clientWidth, 0.2);
+      schedule(() => { pending.current = dir; navigate(target, { state: { swipe: true } }); }, TAB_OUT_MS);
+    }
+  });
+}
+
 function Shell() {
   const hasTrack = usePlayer((s) => !!s.currentId);
   const { pathname } = useLocation();
   const sentinel = useRef<HTMLDivElement>(null);
+  const main = useRef<HTMLElement>(null);
   const scrolled = useScrolled(sentinel);
+  const getMain = useCallback(() => main.current, []);
+  const swipe = useTabSwipe(getMain);
   useEffect(() => { document.querySelector('.shell__main')?.scrollTo(0, 0); }, [pathname]);
   return (
     <div className="shell wd-stage">
       <a href="#konten" className="skip">Lewati ke konten</a>
       <Nav />
-      <main id="konten" tabIndex={-1} className={`shell__main ${hasTrack ? '' : 'shell__main--nomini'}`}>
+      <main ref={main} id="konten" tabIndex={-1} className={`shell__main ${hasTrack ? '' : 'shell__main--nomini'}`} {...swipe}>
         <div ref={sentinel} className="topbar-sentinel" aria-hidden="true" />
         <TopBar scrolled={scrolled} />
         <Routes>
