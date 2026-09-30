@@ -1,6 +1,6 @@
 # Warnada
 test
-Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan **diputar offline**. Tampilan mengikuti design system Warnada (mesh gradient + panel kaca, 8 tema genre, gelap/terang).
+Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan **diputar offline**. Tampilan "cute & tenang": latar krem hangat (atau ungu malam), sampul datar bermotif, huruf bulat (Fredoka + Nunito), dan satu aksen halus yang bisa mengikuti genre lagu. Maskotnya Wada, kucing berkuping headphone.
 
 ## Fitur
 
@@ -12,6 +12,8 @@ Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan 
 - **Melanjutkan**: riwayat putar dan lagu terakhir (beserta posisinya) dipulihkan saat aplikasi dibuka, dalam keadaan jeda.
 - **Pintasan keyboard**: Spasi putar/jeda, ←/→ ±5 detik, N/P berikutnya/sebelumnya, Esc menutup pemutar.
 - **Offline yang jelas**: banner saat offline, dan lagu yang belum diunduh diberi keterangan "Belum diunduh".
+- **Aksen halus**: enam pilihan (lilac, sage, peach, sky, rose, butter) lewat ikon palet. Bila "Ikuti genre lagu" menyala, aksen berganti mengikuti genre lagu yang diputar; latar tetap netral.
+- **Wada**: maskot kucing yang bernyanyi saat lagu diputar dan tidur saat dijeda.
 - **Beranda**: sapaan sesuai waktu, hero "lanjutkan" dengan progres, pilihan cepat (favorit → riwayat), dan rak suasana.
 - **Disukai**: ikon hati di setiap lagu; filter "Disukai" di Pustaka dan rak di Beranda. Tersimpan di perangkat.
 - **Antrean**: lihat, putar dari, dan hapus item antrean (sheet di HP/tablet, tab di panel desktop).
@@ -20,7 +22,7 @@ Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan 
 
 ## Stack
 
-React 19 · Vite · TypeScript (strict) · React Router · Zustand · vite-plugin-pwa/Workbox · Vitest · ESLint. Font di-host sendiri (Fontsource) agar jalan offline dan tanpa request ke pihak ketiga. Pemutar penuh dimuat malas.
+React 19 · Vite · TypeScript (strict) · React Router · Zustand · vite-plugin-pwa/Workbox · Vitest · ESLint. Font Fredoka dan Nunito di-host sendiri (Fontsource) agar jalan offline dan tanpa request ke pihak ketiga. Pemutar penuh dimuat malas.
 
 ## Menjalankan
 

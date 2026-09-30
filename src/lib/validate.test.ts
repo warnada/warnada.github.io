@@ -19,10 +19,17 @@ describe('parseCatalog', () => {
 });
 
 describe('sanitizeSettings', () => {
-  const def = { genre: 'lofi', theme: 'dark', followGenre: true, offlineMode: false, bannerDismissed: false } as const;
+  const def = { accent: 'lilac', theme: 'dark', followGenre: true, offlineMode: false, bannerDismissed: false } as const;
   it('membuang nilai tak valid dan mempertahankan yang valid', () => {
-    expect(sanitizeSettings({ genre: '"><script>', theme: 'neon', followGenre: 'ya', offlineMode: true }, def)).toEqual({ ...def, offlineMode: true });
-    expect(sanitizeSettings({ genre: 'jazz', theme: 'light' }, def)).toEqual({ ...def, genre: 'jazz', theme: 'light' });
+    expect(sanitizeSettings({ accent: '"><script>', theme: 'neon', followGenre: 'ya', offlineMode: true }, def)).toEqual({ ...def, offlineMode: true });
+    expect(sanitizeSettings({ accent: 'sage', theme: 'light' }, def)).toEqual({ ...def, accent: 'sage', theme: 'light' });
   });
   it('tahan terhadap input bukan objek', () => expect(sanitizeSettings(42, def)).toEqual(def));
+});
+
+describe('sanitizeSettings: data lama', () => {
+  const def = { accent: 'lilac', theme: 'dark', followGenre: true, offlineMode: false, bannerDismissed: false } as const;
+  it('mengabaikan field genre lama tanpa merusak pengaturan lain', () => {
+    expect(sanitizeSettings({ genre: 'jazz', theme: 'light', offlineMode: true }, def)).toEqual({ ...def, theme: 'light', offlineMode: true });
+  });
 });

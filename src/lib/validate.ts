@@ -1,4 +1,4 @@
-import { GENRES, type Genre, type ThemeMode, type Track } from './types';
+import { ACCENTS, GENRES, type AccentName, type Genre, type ThemeMode, type Track } from './types';
 
 export class CatalogError extends Error {
   constructor(message: string) { super(message); this.name = 'CatalogError'; }
@@ -37,14 +37,14 @@ export function parseCatalog(json: unknown): Track[] {
   });
 }
 
-export interface Settings { genre: Genre; theme: ThemeMode; followGenre: boolean; offlineMode: boolean; bannerDismissed: boolean }
+export interface Settings { accent: AccentName; theme: ThemeMode; followGenre: boolean; offlineMode: boolean; bannerDismissed: boolean }
 
 /** Data dari localStorage bisa rusak/diubah; ambil hanya nilai valid, sisanya pakai bawaan. */
 export function sanitizeSettings(raw: unknown, fallback: Settings): Settings {
   if (!isRecord(raw)) return { ...fallback };
   const bool = (k: keyof Settings) => (typeof raw[k] === 'boolean' ? (raw[k] as boolean) : (fallback[k] as boolean));
   return {
-    genre: typeof raw.genre === 'string' && (GENRES as readonly string[]).includes(raw.genre) ? (raw.genre as Genre) : fallback.genre,
+    accent: typeof raw.accent === 'string' && (ACCENTS as readonly string[]).includes(raw.accent) ? (raw.accent as AccentName) : fallback.accent,
     theme: raw.theme === 'light' || raw.theme === 'dark' ? raw.theme : fallback.theme,
     followGenre: bool('followGenre'), offlineMode: bool('offlineMode'), bannerDismissed: bool('bannerDismissed')
   };

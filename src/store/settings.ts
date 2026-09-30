@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Genre, ThemeMode } from '@/lib/types';
+import type { AccentName, ThemeMode } from '@/lib/types';
 import { sanitizeSettings } from '@/lib/validate';
 
 interface SettingsState {
-  genre: Genre;
+  accent: AccentName;
   theme: ThemeMode;
   followGenre: boolean;
   offlineMode: boolean;
@@ -17,9 +17,9 @@ const prefersLight = typeof matchMedia !== 'undefined' && matchMedia('(prefers-c
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
-      genre: 'lofi', theme: prefersLight ? 'light' : 'dark', followGenre: true, offlineMode: false, bannerDismissed: false,
+      accent: 'lilac', theme: prefersLight ? 'light' : 'dark', followGenre: true, offlineMode: false, bannerDismissed: false,
       set: (patch) => set(patch)
     }),
-    { name: 'warnada:settings', version: 1, merge: (saved, current) => ({ ...current, ...sanitizeSettings(saved, current) }), partialize: (s) => ({ genre: s.genre, theme: s.theme, followGenre: s.followGenre, offlineMode: s.offlineMode, bannerDismissed: s.bannerDismissed }) }
+    { name: 'warnada:settings', version: 1, merge: (saved, current) => ({ ...current, ...sanitizeSettings(saved, current) }), partialize: (s) => ({ accent: s.accent, theme: s.theme, followGenre: s.followGenre, offlineMode: s.offlineMode, bannerDismissed: s.bannerDismissed }) }
   )
 );

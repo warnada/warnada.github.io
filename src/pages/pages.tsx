@@ -12,18 +12,20 @@ import { FOCUS_SEARCH_EVENT, matchTrack, readGenre, shouldAutofocus } from '@/li
 import { greetingFor, quickPicks } from '@/lib/home';
 import { useSettings } from '@/store/settings';
 import { Art, Chip, Highlight, SongRow, Switch } from '@/components/parts';
+import { Wada } from '@/components/Wada';
+import { Motif } from '@/components/Motif';
+import { GENRE_STYLE } from '@/lib/style';
 import { Icon } from '@/components/Icon';
 import { InstallBanner } from '@/components/Overlays';
 
 const CAROUSEL_MAX = 12;
-const HOME_LIST_MAX = 12;
-const PICKS_MAX = 6;
+const RECENT_ROWS_MAX = 3;
 const SEARCH_DEBOUNCE_MS = 400;
 const URL_SYNC_MS = 500;
 const ids = (t: Track[]) => t.map((x) => x.id);
 
 function Empty({ title, children }: { title: string; children?: React.ReactNode }) {
-  return <div className="empty"><h2>{title}</h2><p>{children}</p></div>;
+  return <div className="empty"><Wada size={72} mood="sleep" /><h2>{title}</h2><p>{children}</p></div>;
 }
 function Skeleton({ rows = 6 }: { rows?: number }) {
   return (
@@ -69,64 +71,53 @@ export function Home() {
   useOnline(); useSettings((s) => s.offlineMode); useLibrary((s) => s.downloaded);
 
   const byId = (list: string[]) => list.flatMap((id) => tracks.find((t) => t.id === id) ?? []);
-  const recent = byId(history).slice(0, CAROUSEL_MAX);
+  const recent = byId(history).slice(0, RECENT_ROWS_MAX);
   const liked = byId(favorites).slice(0, CAROUSEL_MAX);
-  const shelf = recent.length ? recent : tracks.slice(0, CAROUSEL_MAX);
-  const picks = quickPicks(tracks, favorites, history, PICKS_MAX);
-  const hero = tracks.find((t) => t.id === currentId) ?? tracks.find((t) => t.id === last?.id) ?? picks[0];
+  const shelf = quickPicks(tracks, favorites, history, CAROUSEL_MAX);
+  const hero = tracks.find((t) => t.id === currentId) ?? tracks.find((t) => t.id === last?.id) ?? shelf[0];
   const isCurrent = !!hero && hero.id === currentId;
   const resumed = !!hero && last?.id === hero.id && last.position > 1;
   const progress = hero && last?.id === hero.id && hero.duration ? Math.min(100, (last.position / hero.duration) * 100) : 0;
   const heroAction = () => { if (!hero) return; if (isCurrent) toggle(); else playTrack(hero.id, ids(tracks)); };
+  const running = isCurrent && playing;
 
   return (
     <div className="page home">
-      <header className="page__head">
-        <p className="overline">{greetingFor(new Date().getHours())}</p>
-        <h1>Mau dengar apa?</h1>
+      <header className="home__hello">
+        <Wada size={64} mood={running ? 'sing' : 'happy'} bounce={running} />
+        <div>
+          <p className="hello__greet">{greetingFor(new Date().getHours())}</p>
+          <h1>Mau dengar apa?</h1>
+        </div>
       </header>
       <OfflineNotice />
       <InstallBanner />
       <Loading status={status} />
       {status === 'ready' && !hero && <Empty title="Belum ada lagu">Katalog masih kosong.</Empty>}
       {hero && (
-        <div className="home__top">
-          <div className="hero" data-genre={hero.genre}>
-            <span className="overline">{resumed || isCurrent ? 'Terakhir diputar' : `Mix harian · ${tracks.length} lagu`}</span>
-            <h2>{hero.title}</h2>
-            <p>{hero.artist}</p>
-            {progress > 0 && <div className="hero__progress" role="img" aria-label={`Sudah didengarkan ${Math.round(progress)} persen`}><i style={{ width: `${progress}%` }} /></div>}
-            <div className="hero__actions">
-              <button type="button" className="wd-btn wd-btn--accent" onClick={heroAction}><Icon name={isCurrent && playing ? 'pause' : 'play'} />{isCurrent && playing ? 'Jeda' : resumed || isCurrent ? 'Lanjutkan' : 'Putar'}</button>
-              <Link to="/unduhan" className="wd-btn wd-btn--ghost"><Icon name="download" />Unduh</Link>
-            </div>
-          </div>
-          <section className="section picks-section" aria-labelledby="picks-h">
-            <h2 id="picks-h">Pilihan cepat</h2>
-            <div className="picks">{picks.map((t) => <PickTile key={t.id} track={t} queue={ids(tracks)} />)}</div>
-          </section>
+        <div className="continue wd-glass" data-genre={hero.genre}>
+          <Link to="/putar" className="continue__open" aria-label={`Buka pemutar: ${hero.title}`}>
+            <Art genre={hero.genre} src={hero.artwork} className="continue__art" />
+            <span className="continue__text">
+              <span className="overline">{resumed || isCurrent ? 'Terakhir diputar' : `Mix harian · ${tracks.length} lagu`}</span>
+              <span className="continue__title" style={{ display: 'block' }}>{hero.title}</span>
+              <span className="caption" style={{ display: 'block' }}>{hero.artist}</span>
+              {progress > 0 && <span className="continue__progress" role="img" aria-label={`Sudah didengarkan ${Math.round(progress)} persen`} style={{ display: 'block' }}><i style={{ width: `${progress}%` }} /></span>}
+            </span>
+          </Link>
+          <button type="button" className="continue__play" aria-label={running ? 'Jeda' : resumed || isCurrent ? 'Lanjutkan' : 'Putar'} onClick={heroAction}><Icon name={running ? 'pause' : 'play'} /></button>
         </div>
       )}
       {loadingRemote && <p className="caption" role="status">Memuat lagu dari Jamendo…</p>}
       {!!tracks.length && <>
-        <section className="section"><div className="section__head"><h2>Suasana</h2><Link to="/cari" className="section__more">Jelajahi</Link></div>
-          <div className="hscroll hscroll--tiles">{GENRES.map((g) => (
-            <Link key={g} to={`/cari?genre=${g}`} className="tile tile--sm" data-genre={g}><span>{GENRE_LABEL[g]}</span></Link>))}</div></section>
-        <Shelf title={recent.length ? 'Lanjutkan mendengarkan' : 'Populer'} tracks={shelf} all={tracks} />
+        <section className="section" aria-labelledby="mood-h"><div className="section__head"><h2 id="mood-h">Suasana</h2><Link to="/cari" className="section__more">Jelajahi</Link></div>
+          <div className="chips">{GENRES.map((g) => <Link key={g} to={`/cari?genre=${g}`} className="wd-chip">{GENRE_LABEL[g]}</Link>)}</div></section>
+        <Shelf title="Untukmu" tracks={shelf} all={tracks} />
+        {!!recent.length && <section className="section"><div className="section__head"><h2>Baru diputar</h2><Link to="/pustaka" className="section__more">Pustaka</Link></div>
+          <div className="list list--grid">{recent.map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>}
         {!!liked.length && <Shelf title="Disukai" tracks={liked} all={tracks} more={{ to: '/pustaka', label: 'Lihat semua' }} />}
-        <section className="section"><div className="section__head"><h2>Semua lagu</h2>{tracks.length > HOME_LIST_MAX && <Link to="/pustaka" className="section__more">Lihat semua ({tracks.length})</Link>}</div>
-          <div className="list list--grid">{tracks.slice(0, HOME_LIST_MAX).map((t) => <SongRow key={t.id} track={t} queue={ids(tracks)} />)}</div></section>
       </>}
     </div>
-  );
-}
-
-function PickTile({ track, queue }: { track: Track; queue: string[] }) {
-  useOnline(); useSettings((s) => s.offlineMode); useLibrary((s) => s.downloaded);
-  return (
-    <button type="button" className="pick" disabled={!canPlay(track)} onClick={() => playTrack(track.id, queue)}>
-      <Art genre={track.genre} src={track.artwork} className="pick__art" /><span className="pick__title">{track.title}</span>
-    </button>
   );
 }
 
@@ -307,9 +298,9 @@ export function Search() {
           <section className="section" aria-labelledby="genre-h">
             <h2 id="genre-h">Jelajahi genre</h2>
             <div className="genre-grid">{GENRES.map((g) => (
-              <button key={g} type="button" className="tile" data-genre={g} onClick={() => setGenre(g)}><span>{GENRE_LABEL[g]}<small>{counts[g]} lagu</small></span></button>))}</div>
+              <button key={g} type="button" className={`tile tone-${GENRE_STYLE[g].tone}`} data-genre={g} onClick={() => setGenre(g)}><span>{GENRE_LABEL[g]}<small>{counts[g]} lagu</small></span><Motif name={GENRE_STYLE[g].motif} className="tile__motif" /></button>))}</div>
           </section>
-          <p className="search__hint"><Icon name="mic" width={18} height={18} />Ingat liriknya, lupa judulnya? Ketik potongan liriknya di kolom atas.</p>
+          <p className="search__hint"><Wada size={44} mood="sing" />Ingat liriknya, lupa judulnya? Ketik potongan liriknya di kolom atas.</p>
         </>
       )}
 

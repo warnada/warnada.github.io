@@ -32,8 +32,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#0D0A18',
-        theme_color: '#0D0A18',
+        background_color: '#FFF9F3',
+        theme_color: '#FFF9F3',
         categories: ['music', 'entertainment'],
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
