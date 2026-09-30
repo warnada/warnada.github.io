@@ -15,12 +15,6 @@
   --solid-ink: #FFFFFF;
   --on-art: #FFFFFF;
   --scrim-art: rgba(0,0,0,0.4);
-  --tone-peach: #FFD8C4;
-  --tone-mint: #CBEBD9;
-  --tone-lilac: #DDD5F6;
-  --tone-butter: #FFF0B5;
-  --tone-sky: #CDE5F7;
-  --tone-rose: #FFD0DB;
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
   --radius-xs: 12px; --radius-sm: 14px; --radius-md: 18px; --radius-lg: 24px; --radius-xl: 30px; --radius-art: 34px; --radius-pill: 999px;
   --shadow-art: 0 10px 26px rgba(74,63,75,0.12);
@@ -50,12 +44,6 @@
   --shadow-pop: 0 14px 36px rgba(0,0,0,0.45);
   --shadow-knob: 0 1px 4px rgba(0,0,0,0.5);
   color-scheme: dark;
-  --tone-peach: #7A5A4E;
-  --tone-mint: #4B6B5E;
-  --tone-lilac: #5F5980;
-  --tone-butter: #7A6C41;
-  --tone-sky: #48647E;
-  --tone-rose: #7F4E5E;
 }
 
 /* Aksen: fill = tombol/chip/progres; ink = teks di atas fill; strong = ikon/teks kecil di atas permukaan */

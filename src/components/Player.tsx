@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { activeLine, type LyricLine } from '@/lib/lrc';
+import { type LyricLine } from '@/lib/lrc';
 import { loadLyrics } from '@/lib/catalog';
 import { formatTime } from '@/lib/format';
 import { cycleRepeat, currentTrack, next, playTrack, prev, removeQueueItem, seek, toggle, toggleShuffle, usePlayer } from '@/audio/engine';
-import { useTime } from '@/audio/hooks';
+import { useLyricIndex, useTime } from '@/audio/hooks';
 import { useLibrary } from '@/store/library';
 import { useUi } from '@/store/ui';
 import { useSwipe } from '@/lib/useSwipe';
@@ -49,20 +49,23 @@ export function Transport({ big = false }: { big?: boolean }) {
   );
 }
 
-export function Lyrics({ className = '' }: { className?: string }) {
+/** Lirik lagu yang sedang diputar: null = memuat, [] = tidak ada. */
+function useLyricLines(): LyricLine[] | null {
   const track = useCurrent();
   const [data, setData] = useState<{ id: string; lines: LyricLine[] } | null>(null);
-  const lines = data && data.id === track?.id ? data.lines : null;
-  const t = useTime(true);
-  const box = useRef<HTMLDivElement>(null);
-  const idx = lines ? activeLine(lines, t) : -1;
-
   useEffect(() => {
     if (!track) return;
     let ok = true;
     loadLyrics(track).then((l) => ok && setData({ id: track.id, lines: l })).catch(() => ok && setData({ id: track.id, lines: [] }));
     return () => { ok = false; };
   }, [track]);
+  return data && data.id === track?.id ? data.lines : null;
+}
+
+export function Lyrics({ className = '' }: { className?: string }) {
+  const lines = useLyricLines();
+  const idx = useLyricIndex(lines);
+  const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = box.current?.querySelector<HTMLElement>('[aria-current="true"]');
@@ -81,6 +84,25 @@ export function Lyrics({ className = '' }: { className?: string }) {
             <p key={i} aria-current={i === idx ? 'true' : undefined} className={i < idx ? 'is-sung' : undefined} onClick={() => seek(l.time)}>{l.text || '♪'}</p>
           ))}
       </div>
+    </div>
+  );
+}
+
+/** Lirik sebagai awan: baris yang sedang dinyanyikan berupa awan besar, baris sebelum dan sesudahnya awan kecil. Ketuk untuk lompat. */
+export function CloudLyrics() {
+  const lines = useLyricLines();
+  const idx = useLyricIndex(lines);
+  if (lines === null) return <p className="clouds__none">Memuat lirik…</p>;
+  if (!lines.length) return <p className="clouds__none">Lagu ini belum punya lirik tersinkron.</p>;
+  const cur = Math.max(0, idx);
+  const first = Math.max(0, Math.min(cur - 1, lines.length - 3));
+  const win = lines.slice(first, first + 3);
+  return (
+    <div className="clouds" aria-label="Lirik">
+      {win.map((l, k) => {
+        const i = first + k;
+        return <button key={i} type="button" className={`cloud ${i === idx ? 'cloud--now' : ''}`} aria-current={i === idx ? 'true' : undefined} onClick={() => seek(l.time)}>{l.text || '♪'}</button>;
+      })}
     </div>
   );
 }

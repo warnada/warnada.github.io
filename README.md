@@ -1,6 +1,6 @@
 # Warnada
 
-Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan **diputar offline**. Tampilan "cute & tenang": latar krem hangat (atau ungu malam), sampul datar bermotif, huruf bulat (Fredoka + Nunito), dan satu aksen halus yang bisa mengikuti genre lagu. Maskotnya Wada, kucing berkuping headphone.
+Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan **diputar offline**. Tampilan **"Langit Wada"**: suasana lagu adalah cuaca, dan waktu lagu adalah perjalanan matahari di busur langit. Latar krem hangat (atau ungu malam), huruf bulat (Fredoka + Nunito), dan maskot Wada, kucing berkuping headphone.
 
 ## Fitur
 
@@ -12,13 +12,16 @@ Pemutar musik berbasis PWA dengan **lirik tersinkron**, bisa dipasang di HP dan 
 - **Melanjutkan**: riwayat putar dan lagu terakhir (beserta posisinya) dipulihkan saat aplikasi dibuka, dalam keadaan jeda.
 - **Pintasan keyboard**: Spasi putar/jeda, ←/→ ±5 detik, N/P berikutnya/sebelumnya, Esc menutup pemutar.
 - **Offline yang jelas**: banner saat offline, dan lagu yang belum diunduh diberi keterangan "Belum diunduh".
-- **Aksen halus**: enam pilihan (lilac, sage, peach, sky, rose, butter) lewat ikon palet. Bila "Ikuti genre lagu" menyala, aksen berganti mengikuti genre lagu yang diputar; latar tetap netral.
+- **Langit Wada**: tiap genre punya cuaca (Lo-fi hujan senja, Pop cerah, Rock senja membara, Jazz remang ungu, EDM aurora, Akustik padang pagi). Sampul lagu adalah langit mini bergambar SVG, jadi ringan dan tidak perlu gambar.
+- **Matahari sebagai penggeser lagu**: di pemutar, matahari (atau bulan pada aurora) bergerak di busur langit sesuai waktu putar. Geser matahari, atau fokuskan lalu tekan ←/→ (±5 dtk), Home, End, untuk melompat. Lirik tampil sebagai awan (baris aktif besar, bisa diketuk); tombol mikrofon membuka lirik penuh.
+- **Animasi ringan**: hujan, kelopak, bintang, dan awan hanya memakai `transform`/`opacity` (dikerjakan compositor), dijeda saat lagu berhenti atau langit di luar layar, dan dimatikan bila pengguna memilih gerak dikurangi. Saat lagu berjalan hanya lapisan matahari yang diperbarui (~4x/detik); lapisan awan, bukit, dan partikel tidak dirender ulang.
+- **Aksen halus**: enam pilihan (lilac, sage, peach, sky, rose, butter) lewat ikon palet untuk tombol dan sorotan; bila "Ikuti genre lagu" menyala, aksen mengikuti genre.
 - **Wada**: maskot kucing yang bernyanyi saat lagu diputar dan tidur saat dijeda.
-- **Beranda**: sapaan sesuai waktu, hero "lanjutkan" dengan progres, pilihan cepat (favorit → riwayat), dan rak suasana.
+- **Beranda**: hero langit sesuai lagu terakhir, dengan sapaan, tombol lanjutkan, pilihan cepat (favorit → riwayat), dan rak suasana.
 - **Disukai**: ikon hati di setiap lagu; filter "Disukai" di Pustaka dan rak di Beranda. Tersimpan di perangkat.
 - **Antrean**: lihat, putar dari, dan hapus item antrean (sheet di HP/tablet, tab di panel desktop).
-- **Gestur**: geser ke bawah menutup pemutar; geser kiri/kanan pada sampul atau mini player pindah lagu.
-- **Responsif** mobile-first sampai layar lebar (container query): bottom nav (HP) → rail (tablet) → sidebar + panel lirik (laptop). Pemutar dua kolom (sampul + lirik) di tablet/laptop, dan mode landscape pendek untuk ponsel. Menghormati `prefers-reduced-motion` dan `prefers-reduced-transparency`.
+- **Gestur**: geser ke bawah menutup pemutar; geser kiri/kanan pada awan lirik, judul lagu, atau mini player pindah lagu.
+- **Responsif** mobile-first sampai layar lebar (container query): bottom nav (HP) → rail (tablet) → sidebar + panel lirik (laptop). Pemutar dua kolom (langit + kontrol) di tablet/laptop, dan mode landscape pendek untuk ponsel. Menghormati `prefers-reduced-motion` dan `prefers-reduced-transparency`.
 
 ## Stack
 

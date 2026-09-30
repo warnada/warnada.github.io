@@ -5,12 +5,8 @@
 .wd-glass--raised { background: var(--glass-2); }
 .wd-glass--pop { background: var(--glass-pop); box-shadow: var(--shadow-pop); }
 
-/* ---------- Sampul datar: nada pastel + motif putih ---------- */
-.wd-art { position: relative; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); background: var(--tone-lilac); flex-shrink: 0; overflow: hidden; }
-.tone-peach { background: var(--tone-peach); } .tone-mint { background: var(--tone-mint); } .tone-lilac { background: var(--tone-lilac); }
-.tone-butter { background: var(--tone-butter); } .tone-sky { background: var(--tone-sky); } .tone-rose { background: var(--tone-rose); }
-.wd-art__motif { width: 60%; height: 60%; pointer-events: none; }
-.wd-art--bare { background: transparent; }
+/* ---------- Sampul: langit mini (lihat blok Langit Wada di base.css) ---------- */
+.wd-art { position: relative; display: block; border-radius: var(--radius-sm); background: var(--surface-base); flex-shrink: 0; overflow: hidden; }
 
 /* ---------- Tombol ---------- */
 .wd-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 44px; padding: 0 22px; border: 0; border-radius: var(--radius-pill); font: 800 15px/1 var(--font-sans); cursor: pointer; color: var(--ink); background: transparent; }

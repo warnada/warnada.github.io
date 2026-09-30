@@ -414,7 +414,6 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
 .genre-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .tile{position:relative;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);min-height:96px;padding:0 var(--space-3) 0 var(--space-4);border:0;border-radius:var(--radius-lg);color:var(--ink);cursor:pointer;text-align:left;font:600 19px var(--font-display)}
 .tile small{display:block;font:700 12px var(--font-sans);opacity:.85}
-.tile__motif{width:46px;height:46px;flex-shrink:0}
 
 /* Pemutar penuh: sampul + Wada mengintip */
 .full__artwrap{position:relative;width:min(72vw,320px,38vh);margin:var(--space-3) auto}
@@ -433,3 +432,115 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
 .full__lyriccard .full__lyrics{padding-block:6vh}
 @media (min-width:820px){.full__artwrap,.full--lyrics .full__artwrap{margin-top:0}.full__wada{top:-46px}}
 @media (max-height:700px){.full__artwrap{margin-top:var(--space-6);width:min(60vw,300px,32vh)}}
+
+/* =====================================================================
+   Langit Wada: suasana lagu = cuaca, waktu lagu = perjalanan matahari.
+   Animasi hanya memakai transform/opacity (compositor), dijeda saat lagu
+   berhenti atau langit di luar layar, dan dimatikan bila pengguna minta
+   gerak dikurangi.
+   ===================================================================== */
+.sky{position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(180deg,var(--sk-top),var(--sk-bot));contain:layout paint}
+.sky__layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.sk-sun{fill:var(--sk-sun)}.sk-cloud{fill:var(--sk-cloud)}.sk-cloud2{fill:var(--sk-cloud2)}
+.sk-h1{fill:var(--sk-h1)}.sk-h2{fill:var(--sk-h2)}.sk-h3{fill:var(--sk-h3)}
+.sky-mini{position:absolute;inset:0;display:block;background:linear-gradient(180deg,var(--sk-top),var(--sk-bot))}
+.sky-mini svg{display:block;width:100%;height:100%}
+
+/* matahari + busur */
+.sky__sun{transition:transform .28s linear}
+.sky__sun[data-drag="true"]{transition:none}
+.sky__arc{fill:none;stroke:var(--sk-ink);stroke-width:4;stroke-linecap:round;stroke-dasharray:.01 3;opacity:.45}
+.sky__arc--done{stroke-dasharray:0 100;opacity:.65;stroke-width:5}
+.sky__end{fill:var(--sk-ink);opacity:.5}
+.sky__endtext{fill:var(--sk-ink);font:800 13px var(--font-sans);opacity:.8}
+.sky__chip{fill:#fff;fill-opacity:.78}
+.sky__chiptext{fill:#3D3345;font:800 13px var(--font-sans)}
+.sky__layer--scrub{touch-action:none}
+.sky__hit{fill:none;stroke:transparent;stroke-width:64;pointer-events:stroke;cursor:grab}
+.sky__body{pointer-events:all;cursor:grab}
+.sky__slider{outline:none}
+.sky__slider:focus-visible .sky__body{stroke:var(--sk-ink);stroke-width:4}
+
+/* awan bergeser, hujan / kelopak jatuh, bintang berkelip */
+@keyframes sky-drift{from{transform:translate3d(-14px,0,0)}to{transform:translate3d(14px,0,0)}}
+@keyframes sky-fall{0%{transform:translate3d(0,-20px,0);opacity:0}12%{opacity:.85}100%{transform:translate3d(-10px,150px,0);opacity:0}}
+@keyframes sky-petal{0%{transform:translate3d(0,-10px,0) rotate(0);opacity:0}15%{opacity:.9}100%{transform:translate3d(-40px,190px,0) rotate(200deg);opacity:0}}
+@keyframes sky-twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+.sky__clouds{animation:sky-drift 40s ease-in-out infinite alternate paused;will-change:transform}
+.sky__parts i{position:absolute;left:var(--x);top:var(--y);display:block;pointer-events:none;animation-delay:var(--d);animation-duration:var(--dur);animation-iteration-count:infinite;animation-play-state:paused}
+.sky__parts--rain i{width:2px;height:14px;border-radius:2px;background:rgba(255,255,255,.75);animation-name:sky-fall;animation-timing-function:linear;will-change:transform,opacity}
+.sky__parts--petal i{width:9px;height:6px;border-radius:50%;background:#FFC2D1;animation-name:sky-petal;animation-timing-function:ease-in-out;will-change:transform,opacity}
+.sky__parts--stars i{width:var(--s);height:var(--s);border-radius:50%;background:#fff;animation-name:sky-twinkle;animation-timing-function:ease-in-out}
+.sky[data-live="true"] .sky__clouds,.sky[data-live="true"] .sky__parts i{animation-play-state:running}
+@media (prefers-reduced-motion:reduce){
+  .sky__clouds,.sky__parts i,.wada--bob{animation:none!important}
+  .sky__sun{transition:none}
+}
+
+/* sampul & ubin genre */
+.tile{position:relative;overflow:hidden;align-items:flex-end;justify-content:flex-start;padding:0 var(--space-4) var(--space-3);color:var(--sk-ink)}
+.tile__label{position:relative;z-index:1;font:600 19px/1.1 var(--font-display)}
+.tile small{margin-top:2px}
+
+/* Beranda: hero langit */
+.lhero{position:relative;width:100%;max-width:520px;display:flex;flex-direction:column}
+.lhero__sky{aspect-ratio:400/320;border-radius:var(--radius-xl)}
+.lhero__text{position:absolute;left:18px;top:16px;right:112px;color:var(--sk-ink)}
+.lhero__text .hello__greet{color:inherit;opacity:.8}
+.lhero__text h1{font:700 30px/1.05 var(--font-display);margin:0;letter-spacing:0}
+.lhero__sub{margin:4px 0 0;font:700 14px var(--font-sans);opacity:.8}
+.lhero__wada{position:absolute;right:14px;bottom:30px}
+.lhero__now{position:relative;z-index:1;margin:-26px 12px 0;display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:var(--radius-xl);background:var(--glass-1);box-shadow:var(--shadow-float)}
+.lhero__now .continue__open{flex:1;min-width:0}
+
+/* Pemutar: langit di atas, lembar krem di bawah */
+.lw{padding:0;background:var(--surface-base)}
+.lw__top{position:absolute;left:0;right:0;top:0;z-index:5;padding:calc(env(safe-area-inset-top) + 8px) var(--space-4) 0;color:var(--sk-ink)}
+.lw__top .icon-btn{background:var(--glass-1);color:var(--ink);box-shadow:var(--shadow-knob)}
+.lw__weather{text-align:center;font:700 18px/1.1 var(--font-display)}
+.lw__weather small{display:block;font:800 11px var(--font-sans);letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.lw__stage{position:relative;flex:0 0 auto;height:clamp(400px,64dvh,700px)}
+.lw .lw__sky{position:absolute;inset:0}
+.lw__clouds{position:absolute;left:104px;right:14px;bottom:20%;z-index:2}
+.lw__wada{position:absolute;left:10px;bottom:34px;z-index:3}
+.lw__sheet{position:relative;z-index:2;flex:1;min-height:0;margin-top:-28px;padding:22px var(--space-5) calc(env(safe-area-inset-bottom) + 14px);border-radius:32px 32px 0 0;background:var(--surface-base);box-shadow:0 -6px 24px rgba(74,63,75,.12);display:flex;flex-direction:column;gap:var(--space-2);overflow:auto}
+.lw__sheet .full__meta{margin-top:0}
+.lw__hint{text-align:center;margin:0}
+@media (max-height:700px){.lw__hint{display:none}}
+.lw__full{position:relative;flex:1;min-height:0;display:flex;padding:calc(env(safe-area-inset-top) + 64px) var(--space-5) 0}
+.lw__full>*{flex:1;min-width:0}
+.lw--lyrics .lw__stage{display:none}
+.lw--lyrics .lw__sheet{margin-top:0;flex:0 0 auto}
+.lw--lyrics .lw__top{color:var(--ink)}
+
+/* lirik awan */
+.clouds{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.clouds__none{margin:0;padding:8px 14px;border-radius:18px;background:rgba(255,255,255,.4);color:var(--sk-ink);font:700 14px var(--font-sans)}
+.cloud{max-width:100%;border:0;text-align:left;cursor:pointer;font:500 14px/1.25 var(--font-display);padding:6px 14px;border-radius:18px;background:rgba(255,255,255,.4);color:var(--sk-ink);transition:transform .25s var(--ease),background .25s}
+.cloud--now{font:600 19px/1.2 var(--font-display);padding:10px 18px;border-radius:24px 24px 24px 8px;background:rgba(255,255,255,.94);color:#3D3345;box-shadow:0 6px 16px rgba(50,40,90,.18);transform:scale(1.02);transform-origin:left center}
+.lw[data-weather="aurora"] .cloud:not(.cloud--now),.lw[data-weather="aurora"] .clouds__none{background:rgba(20,20,70,.4)}
+.cloud:focus-visible{outline:2px solid var(--sk-ink);outline-offset:2px}
+
+@media (min-width:820px),(max-height:520px) and (orientation:landscape){
+  .lw{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);grid-template-rows:auto 1fr}
+  .lw__stage{grid-column:1;grid-row:1/3;height:auto}
+  .lw__clouds{bottom:26%;left:150px}
+  .lw__wada{left:24px;bottom:12px}
+  .lw__sheet{grid-column:2;grid-row:1/3;align-self:center;margin:0;border-radius:0;box-shadow:none;background:transparent;padding:calc(env(safe-area-inset-top) + 72px) var(--space-8) var(--space-8);overflow:visible}
+  .lw__top{justify-content:flex-start;padding-inline:var(--space-5)}
+  .lw__weather{text-align:left;margin-left:14px}
+  .lw__top .full__actions{margin-left:auto}
+  .lw--lyrics .lw__stage{display:block}
+  .lw--lyrics .lw__sheet{display:flex;grid-row:1;align-self:start}
+  .lw__full{grid-column:2;grid-row:2;padding:0 var(--space-8)}
+  .lw--lyrics .lw__top{color:var(--sk-ink)}
+}
+
+/* Navigasi mengambang di ponsel */
+@media (max-width:600px){
+  .shell__nav{background:transparent;border:0;pointer-events:none;padding:0 14px calc(env(safe-area-inset-bottom) + 10px)}
+  .shell__nav .wd-nav{pointer-events:auto;height:64px;padding:8px;gap:4px;border:0;border-radius:32px;background:var(--glass-pop);box-shadow:var(--shadow-pop)}
+  .wd-nav a{height:48px;border-radius:24px;gap:0;font-size:11px}
+  .wd-nav a span{width:auto;height:26px;background:none!important}
+  .wd-nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+}
