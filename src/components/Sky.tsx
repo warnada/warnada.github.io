@@ -40,6 +40,9 @@ const hillPath = (vbH: number, i: number) => {
 };
 
 const layerProps = (vbH: number) => ({ viewBox: `0 0 ${VB_W} ${vbH}`, preserveAspectRatio: 'xMidYMax slice', focusable: 'false' as const });
+/** Lapisan busur selalu utuh (meet), berapa pun rasio layarnya: hanya bagian sekitar busur yang diambil dari viewBox. */
+const ARC_PAD_TOP = 60, ARC_PAD_BOTTOM = 50;
+const arcProps = (baseY: number) => ({ viewBox: `0 ${baseY - ARC.radius - ARC_PAD_TOP} ${VB_W} ${ARC.radius + ARC_PAD_TOP + ARC_PAD_BOTTOM}`, preserveAspectRatio: 'xMidYMin meet', focusable: 'false' as const });
 const AURORA = ['#7CF0C6', '#F49AE0', '#8FC4FF'] as const;
 
 /** Lapisan statis di belakang matahari: hanya pita aurora untuk langit malam. */
@@ -134,7 +137,7 @@ const Sun = memo(function Sun({ weather, vbH, baseFrac, t, duration, arc, onScru
   };
   const label = `${formatTime(shown * duration)} dari ${formatTime(duration)}`;
   return (
-    <svg ref={svg} className={`sky__layer ${onScrub ? 'sky__layer--scrub' : ''}`} {...layerProps(vbH)} aria-hidden={onScrub ? undefined : true}>
+    <svg ref={svg} className={`sky__layer ${arc ? 'sky__layer--arc' : ''} ${onScrub ? 'sky__layer--scrub' : ''}`} {...(arc ? arcProps(baseY) : layerProps(vbH))} aria-hidden={onScrub ? undefined : true}>
       {arc && <>
         <path d={arcD} className="sky__arc" pathLength={100} />
         <path d={arcD} className="sky__arc sky__arc--done" pathLength={100} style={{ strokeDasharray: `${(shown * 100).toFixed(2)} 100` }} />
@@ -148,7 +151,7 @@ const Sun = memo(function Sun({ weather, vbH, baseFrac, t, duration, arc, onScru
         <g className="sky__sun" data-drag={drag !== null} style={{ transform: `translate(${p.x}px, ${p.y}px)` }}>
           <circle r={52} className="sk-sun" opacity=".22" /><circle r={38} className="sk-sun" opacity=".35" /><circle r={26} className="sk-sun sky__body" />
           {night && <><circle cx={-8} cy={-6} r={5} fill="#DAD3F0" opacity=".7" /><circle cx={9} cy={8} r={3.5} fill="#DAD3F0" opacity=".7" /></>}
-          {arc && duration > 0 && <g transform="translate(38 -13)"><rect width="54" height="26" rx="13" className="sky__chip" /><text x="27" y="18" textAnchor="middle" className="sky__chiptext">{formatTime(shown * duration)}</text></g>}
+          {arc && duration > 0 && <g transform={`translate(${p.x > 260 ? -92 : 38} -13)`}><rect width="54" height="26" rx="13" className="sky__chip" /><text x="27" y="18" textAnchor="middle" className="sky__chiptext">{formatTime(shown * duration)}</text></g>}
         </g>
       </g>
     </svg>
@@ -199,4 +202,17 @@ export function TimedSky({ trackId, duration, fallbackT = 0, interactive = false
   const total = (isCurrent && engineDuration) || duration;
   const t = isCurrent ? fraction(time, total) : fallbackT;
   return <Sky {...rest} t={t} duration={total} live={isCurrent && playing} onScrub={interactive && isCurrent ? seek : undefined} />;
+}
+
+/** Pita langit statis di kepala halaman (Cari, Pustaka, Unduhan): judul di atas langit, tanpa animasi. */
+export function PageSky({ weather, title, sub, t = 0.85 }: { weather: Weather; title: string; sub?: string; t?: number }) {
+  return (
+    <header className="pagesky">
+      <Sky className="pagesky__sky" weather={weather} vbH={230} baseFrac={0.7} t={t} duration={0} live={false} arc={false} />
+      <div className="pagesky__text" style={{ color: SKY[weather].ink }}>
+        <h1>{title}</h1>
+        {sub && <p>{sub}</p>}
+      </div>
+    </header>
+  );
 }
