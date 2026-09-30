@@ -647,7 +647,8 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
 .shell__main[data-swiping][data-settle]>.page{transition:transform .22s cubic-bezier(.3,.7,.3,1)}
 /* selama geser/transisi: jeda animasi dekoratif, matikan animasi masuk halaman, dan ringankan salinan */
 .shell__main[data-busy] .page *{animation-play-state:paused!important}
-.page--ghost,.page--ghost *{animation:none!important;will-change:auto!important}
+.page--ghost,.page--ghost *{animation:none!important}
+.page-ghostwrap{contain:strict}
 
 /* pemutar: geser atas = berikutnya, bawah = sebelumnya */
 .lw{touch-action:none}
