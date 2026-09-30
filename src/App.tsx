@@ -97,9 +97,11 @@ function TopBar({ scrolled }: { scrolled: boolean }) {
 
 /** Area yang punya geser/gulir sendiri atau kontrol geser: geser antarmenu tidak dimulai dari sini. */
 const TAB_SWIPE_BLOCKED = '.hscroll, .chips, .sky__slider, .full__lyrics, .sheet, .toast, input, textarea, select, [role="slider"]';
-const TAB_SLIDE_MS = 300;
+const TAB_SLIDE_MS = 320;
 const TAB_EASE = 'cubic-bezier(.22,.8,.26,1)';
 const TAB_SAFETY_MS = 1500;
+const TAB_TRAVEL = 0.22; // jarak geser (fraksi lebar) selama transisi blur
+const TAB_BLUR_PX = 8;
 
 /** Manipulasi DOM untuk animasi geser antarmenu. Sengaja di luar komponen: ini gaya sementara per-frame, bukan state React. */
 const tabDom = {
@@ -118,30 +120,44 @@ const tabDom = {
   },
   idle(el: HTMLElement) { tabDom.clear(el); delete el.dataset.busy; },
   page: (el: HTMLElement) => el.querySelector<HTMLElement>(':scope > .page:not(.page--ghost)'),
-  /** Salinan statis halaman lama di posisi yang sama: tetap terlihat dan meluncur keluar sementara halaman baru dirender. */
+  /**
+   * Salinan statis halaman lama tepat di posisi yang terlihat. Dibungkus kotak seukuran layar (terpotong) agar filter blur
+   * hanya memproses area yang terlihat, bukan seluruh tinggi halaman. Kotak inilah yang dianimasikan.
+   */
   ghost(el: HTMLElement): HTMLElement | null {
     const page = tabDom.page(el);
     if (!page) return null;
-    const g = page.cloneNode(true) as HTMLElement;
-    g.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
-    g.removeAttribute('id');
-    g.setAttribute('aria-hidden', 'true'); g.inert = true; g.classList.add('page--ghost');
-    Object.assign(g.style, { position: 'absolute', left: '0', top: `${page.offsetTop}px`, width: `${page.offsetWidth}px`, margin: '0', pointerEvents: 'none', transform: getComputedStyle(page).transform });
-    el.appendChild(g);
-    return g;
+    const inner = page.cloneNode(true) as HTMLElement;
+    inner.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+    inner.removeAttribute('id');
+    inner.classList.add('page--ghost');
+    Object.assign(inner.style, { position: 'absolute', left: `${page.offsetLeft}px`, top: `${page.offsetTop - el.scrollTop}px`, width: `${page.offsetWidth}px`, margin: '0' });
+    const wrap = document.createElement('div');
+    wrap.className = 'page--ghost page-ghostwrap';
+    wrap.setAttribute('aria-hidden', 'true'); wrap.inert = true;
+    Object.assign(wrap.style, { position: 'absolute', left: '0', top: `${el.scrollTop}px`, width: `${el.clientWidth}px`, height: `${el.clientHeight}px`, overflow: 'hidden', pointerEvents: 'none' });
+    wrap.appendChild(inner);
+    el.appendChild(wrap);
+    return wrap;
   },
   timing(): KeyframeAnimationOptions {
     return { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : TAB_SLIDE_MS, easing: TAB_EASE, fill: 'both' };
   },
-  /** Halaman lama keluar SEGERA (compositor, tidak menunggu render halaman baru). */
+  /** Halaman lama keluar SEGERA (compositor, tidak menunggu render halaman baru): bergeser sedikit, memudar, dan memburam. */
   out(ghost: HTMLElement, dir: Dir, fromX: number, width: number): Animation {
     const sign = dir === 'next' ? 1 : -1;
-    return ghost.animate([{ transform: `translate3d(${fromX}px,0,0)` }, { transform: `translate3d(${-sign * width}px,0,0)` }], tabDom.timing());
+    return ghost.animate([
+      { transform: `translate3d(${fromX}px,0,0)`, opacity: 1, filter: 'blur(0px)' },
+      { transform: `translate3d(${fromX - sign * width * TAB_TRAVEL}px,0,0)`, opacity: 0, filter: `blur(${TAB_BLUR_PX}px)` }
+    ], tabDom.timing());
   },
-  /** Halaman baru masuk, diselaraskan dengan waktu berjalan animasi keluar (jam dinding) sehingga keduanya tetap bersebelahan. */
+  /** Halaman baru masuk dari sisi lawan: mulai buram dan transparan lalu menajam. Diselaraskan dengan waktu berjalan animasi keluar (jam dinding). */
   enter(page: HTMLElement, elapsedMs: number, dir: Dir, fromX: number, width: number): Animation {
     const sign = dir === 'next' ? 1 : -1;
-    const a = page.animate([{ transform: `translate3d(${sign * width + fromX}px,0,0)` }, { transform: 'translate3d(0,0,0)' }], tabDom.timing());
+    const a = page.animate([
+      { transform: `translate3d(${sign * width * TAB_TRAVEL + fromX}px,0,0)`, opacity: 0, filter: `blur(${TAB_BLUR_PX}px)` },
+      { transform: 'translate3d(0,0,0)', opacity: 1, filter: 'blur(0px)' }
+    ], tabDom.timing());
     a.currentTime = elapsedMs;
     return a;
   }
@@ -180,6 +196,8 @@ function useTabSwipe(getMain: () => HTMLElement | null) {
     if (!el || !p) return;
     pending.current = null;
     const fresh = tabDom.page(el);
+    el.scrollTop = 0; // halaman baru selalu mulai dari atas; ghost sudah membawa posisi gulir lama
+    if (p.ghost) p.ghost.style.top = '0px'; // ghost tetap di layar walau isi gulir kembali ke atas
     const anims = [p.out, fresh ? tabDom.enter(fresh, performance.now() - p.startedAt, p.dir, p.fromX, p.width) : null].filter((a): a is Animation => !!a);
     if (!anims.length) { finish(el, p.ghost, []); return; }
     void Promise.all(anims.map((a) => a.finished.catch(() => undefined))).then(() => finish(el, p.ghost, anims));
