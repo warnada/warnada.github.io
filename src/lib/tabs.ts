@@ -13,3 +13,12 @@ export function neighborTab(pathname: string, dir: Dir): string | null {
   if (i < 0) return null;
   return TAB_PATHS[i + (dir === 'next' ? 1 : -1)] ?? null;
 }
+
+/** Posisi horizontal (px) panel ke-i saat panel aktif digeser sejauh dx; step = lebar panel + jarak antarpanel. */
+export const paneX = (i: number, active: number, dx: number, step: number): number => (i - active) * step + dx;
+
+/** Durasi animasi lanjutan setelah jari dilepas: cepat bila sentakan cepat, tidak pernah terlalu lambat atau terlalu kilat. */
+export function settleMs(remainingPx: number, velocity: number): number {
+  const speed = Math.max(Math.abs(velocity), 1.1); // px/ms
+  return Math.round(Math.min(320, Math.max(170, (Math.abs(remainingPx) / speed) * 1.6)));
+}

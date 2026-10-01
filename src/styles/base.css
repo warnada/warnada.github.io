@@ -623,9 +623,9 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
 /* Beranda ponsel: langit naik sampai ke tepi atas, di bawah bilah atas yang transparan */
 .lhero__sky .sky__layer--arc{inset:50px 0 auto 38%;height:calc(72% - 50px)}
 @media (max-width:600px){
-  .shell__main:has(.lhero){--lhero-under:64px}
-  .shell__main:has(.lhero) .topbar:not(.is-scrolled){background:transparent;border-bottom-color:transparent}
-  .shell__main:has(.lhero[data-genre="edm"]) .topbar:not(.is-scrolled) .topbar__brand{color:#F3F0FF}
+  .shell__main:has(.pane.is-active .lhero){--lhero-under:64px}
+  .shell__main:has(.pane.is-active .lhero) .topbar:not(.is-scrolled){background:transparent;border-bottom-color:transparent}
+  .shell__main:has(.pane.is-active .lhero[data-genre="edm"]) .topbar:not(.is-scrolled) .topbar__brand{color:#F3F0FF}
   .lhero{margin-top:calc(-64px - var(--space-2))}
   .lhero__sky{aspect-ratio:390/540}
   .lhero__sky .sky__layer--arc{inset:180px 0 auto 0;height:calc(74% - 180px)}
@@ -638,17 +638,11 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
 }
 
 /* =====================================================================
-   Gestur geser. Konten mengikuti jari lewat CSS variable (--tx / --sw),
+   Gestur geser. Konten mengikuti jari lewat transform/CSS variable,
    hanya transform + opacity, sehingga tetap di compositor.
    ===================================================================== */
 /* antarmenu: geser kiri/kanan (scroll vertikal tetap milik browser) */
 .shell__main{touch-action:pan-y;position:relative}
-.shell__main[data-swiping]>.page{transform:translate3d(var(--tx,0px),0,0);will-change:transform}
-.shell__main[data-swiping][data-settle]>.page{transition:transform .22s cubic-bezier(.3,.7,.3,1)}
-/* selama geser/transisi: jeda animasi dekoratif, matikan animasi masuk halaman, dan ringankan salinan */
-.shell__main[data-busy] .page *{animation-play-state:paused!important}
-.page--ghost,.page--ghost *{animation:none!important}
-.page-ghostwrap{contain:strict}
 
 /* pemutar: geser atas = berikutnya, bawah = sebelumnya */
 .lw{touch-action:none}
@@ -692,3 +686,20 @@ a.wd-chip{display:inline-flex;align-items:center;text-decoration:none}
 @media (max-height:700px) and (max-width:899px){.lw .sky__layer--arc{height:calc(54% - 56px)}}
 @media (max-height:520px) and (orientation:landscape){.lw .sky__layer--arc{height:calc(56% - 56px)}}
 @media (min-width:1400px){.lw .wd-transport .vinyl{--v:124px}.lw__sheet .full__meta h1{font-size:38px}.lw__sheet .full__meta p{font-size:17px}}
+
+/* =====================================================================
+   Menu sebagai carousel (TabPager): keempat halaman tetap terpasang.
+   Hanya panel aktif yang ikut alur dokumen; tetangga diposisikan absolut,
+   tersembunyi saat diam, dan saat digeser hanya transform-nya yang berubah.
+   ===================================================================== */
+.pager{position:relative}
+.pane{will-change:transform}
+.pane.is-active{position:relative}
+/* Tetangga: dipotong setinggi layar (tidak menambah panjang gulir), padding atas 80px agar hero Beranda yang
+   naik ke balik bilah atas tidak terpotong; sumbu x tetap terlihat untuk elemen full-bleed.
+   Disembunyikan dengan opacity (bukan visibility): isinya sudah tergambar saat diam, jadi awal geser cukup
+   mengubah opacity + transform di compositor tanpa paint di main thread. inert + pointer-events:none
+   memastikan tidak bisa disentuh, difokus, atau dibaca pembaca layar. */
+.pane:not(.is-active){position:absolute;left:0;right:0;top:-80px;padding-top:80px;height:calc(var(--pane-h,100dvh) + 16px);overflow:visible clip;opacity:0;pointer-events:none;contain:layout style}
+.pane:not(.is-active) *{animation-play-state:paused!important}
+.pane:not(.is-active) .searchhead{position:static}
