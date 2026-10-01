@@ -10,7 +10,8 @@ export interface AxisDragOptions {
   size: () => number;
   /** posisi seretan (px). Dipanggil paling banyak sekali per frame, tanpa render ulang React. */
   onDrag: (delta: number) => void;
-  onEnd: (delta: number, committed: boolean) => void;
+  /** delta px, jadi atau tidak, dan kecepatan lepas (px/ms, bertanda) untuk menyesuaikan durasi animasi lanjutan */
+  onEnd: (delta: number, committed: boolean, velocity: number) => void;
 }
 
 type Phase = 'idle' | 'pending' | 'drag' | 'ignored';
@@ -33,7 +34,8 @@ export function useAxisDrag(options: AxisDragOptions) {
     if (!wasDrag) return;
     st.swallow = true;
     const o = latest.current;
-    o.onEnd(st.delta, committedAllowed && shouldCommit(st.delta, velocityOf(st.samples), o.size()));
+    const v = velocityOf(st.samples);
+    o.onEnd(st.delta, committedAllowed && shouldCommit(st.delta, v, o.size()), v);
   };
 
   return {

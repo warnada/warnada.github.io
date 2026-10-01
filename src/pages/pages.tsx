@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { GENRES, GENRE_LABEL, type Genre, type Track } from '@/lib/types';
 import { formatSize } from '@/lib/format';
 import { loadLyrics } from '@/lib/catalog';
@@ -209,10 +209,9 @@ export function Downloads() {
  * Cari + Jelajah dalam satu halaman. Keadaan (kata + genre) disimpan di URL:
  * /cari?q=hujan&genre=jazz, sehingga tombol Back dan tautan dari Beranda bekerja.
  */
-export function Search() {
+export function Search({ active = true }: { active?: boolean }) {
   const { tracks, status } = useTracks();
   const [params, setParams] = useSearchParams();
-  const viaSwipe = (useLocation().state as { swipe?: boolean } | null)?.swipe === true;
   const genre = readGenre(params.get('genre'));
   const [q, setQ] = useState(params.get('q') ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -227,14 +226,15 @@ export function Search() {
     if (g) next.set('genre', g); else next.delete('genre');
     setParams(next, { replace: true });
   };
-  useEffect(() => { // tulis kata ke URL setelah jeda (Safari membatasi jumlah replaceState per detik)
+  useEffect(() => { // tulis kata ke URL setelah jeda (Safari membatasi jumlah replaceState per detik); hanya saat halaman ini yang tampil
+    if (!active) return;
     const timer = window.setTimeout(() => {
       const next = new URLSearchParams(window.location.search);
       if (q.trim()) next.set('q', q.trim()); else next.delete('q');
       if (next.toString() !== window.location.search.replace(/^\?/, '')) setParams(next, { replace: true });
     }, URL_SYNC_MS);
     return () => clearTimeout(timer);
-  }, [q, setParams]);
+  }, [q, setParams, active]);
 
   const [lyr, setLyr] = useState<Record<string, string[]>>({});
   useEffect(() => { // muat lirik sekali untuk pencarian berbasis lirik
@@ -247,7 +247,7 @@ export function Search() {
   const [found, setFound] = useState<{ key: string; ids: Set<string> }>({ key: '', ids: new Set() });
   useEffect(() => { // pencarian katalog Jamendo (debounce + batal saat mengetik lagi)
     const source = jamendo;
-    if (!source || term.length < 2) return;
+    if (!active || !source || term.length < 2) return;
     const ctl = new AbortController();
     const timer = window.setTimeout(() => {
       setRemote('loading');
@@ -256,7 +256,7 @@ export function Search() {
         .catch((e) => { if (!ctl.signal.aborted) { setRemote('error'); console.debug(e); } });
     }, SEARCH_DEBOUNCE_MS);
     return () => { clearTimeout(timer); ctl.abort(); };
-  }, [term, q, genre, key, addTracks]);
+  }, [term, q, genre, key, addTracks, active]);
 
   const inGenre = useMemo(() => (genre ? tracks.filter((t) => t.genre === genre) : tracks), [tracks, genre]);
   const results = useMemo(() => !term ? [] : inGenre.flatMap((t) => {
@@ -269,12 +269,17 @@ export function Search() {
   const submit = (e: React.FormEvent) => { e.preventDefault(); addRecentSearch(q); inputRef.current?.blur(); };
   const onKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Escape') { if (q) setQ(''); else inputRef.current?.blur(); } };
   const pickRecent = (t: string) => { setQ(t); inputRef.current?.focus(); };
+  // Halaman tetap terpasang di balik menu lain (geser antarmenu tanpa render ulang), jadi fokus diatur saat halaman ini aktif:
+  // dibuka langsung (/cari polos) atau lewat menu = siap mengetik; lewat geser atau tautan bertujuan (genre/kata) = tidak dipaksa.
+  const wantFocus = useRef(active && shouldAutofocus(new URLSearchParams(window.location.search)));
   const counts = useMemo(() => Object.fromEntries(GENRES.map((g) => [g, tracks.filter((t) => t.genre === g).length])) as Record<Genre, number>, [tracks]);
-  useEffect(() => { // dibuka dari menu = langsung siap mengetik; tujuan lain (genre/kata di URL) tidak dipaksa
-    if (!viaSwipe && shouldAutofocus(new URLSearchParams(window.location.search))) inputRef.current?.focus();
-  }, [viaSwipe]);
-  useEffect(() => { // klik menu Cari saat sudah di halaman ini
-    const focus = () => inputRef.current?.focus();
+  useEffect(() => {
+    if (active && wantFocus.current) { wantFocus.current = false; inputRef.current?.focus(); }
+  }, [active]);
+  const activeRef = useRef(active);
+  useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { // klik menu Cari: fokus sekarang bila sudah tampil, atau begitu halaman ini aktif
+    const focus = () => { if (activeRef.current) inputRef.current?.focus(); else wantFocus.current = true; };
     addEventListener(FOCUS_SEARCH_EVENT, focus);
     return () => removeEventListener(FOCUS_SEARCH_EVENT, focus);
   }, []);

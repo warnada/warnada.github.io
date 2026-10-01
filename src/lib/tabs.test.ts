@@ -18,3 +18,24 @@ describe('tabs', () => {
     expect(neighborTab('/tidak-ada', 'next')).toBeNull();
   });
 });
+
+import { paneX, settleMs } from './tabs';
+
+describe('paneX', () => {
+  it('panel aktif di 0, tetangga satu langkah di kiri/kanan, semua ikut seretan', () => {
+    expect(paneX(1, 1, 0, 430)).toBe(0);
+    expect(paneX(2, 1, 0, 430)).toBe(430);
+    expect(paneX(0, 1, -50, 430)).toBe(-480);
+    expect(paneX(2, 1, -50, 430)).toBe(380);
+  });
+});
+
+describe('settleMs', () => {
+  it('dibatasi 170–320 ms', () => {
+    expect(settleMs(400, 0)).toBe(320);
+    expect(settleMs(20, 5)).toBe(170);
+  });
+  it('sentakan lebih cepat = lebih singkat', () => {
+    expect(settleMs(300, 3)).toBeLessThan(settleMs(300, 0.5));
+  });
+});
